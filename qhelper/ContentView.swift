@@ -7,21 +7,24 @@
 
 import SwiftUI
 
-func shellEnv(_ command: String) -> String {
+func parseSheet(filename: String) {
     let task = Process()
-    let pipe = Pipe()
+    task.executableURL = URL(fileURLWithPath: "/usr/bin/python")
+    let script = Bundle.main.path(forResource: "eject", ofType: "py")
+    task.arguments = [script!, filename]
+    let outputPipe = Pipe()
+    task.standardOutput = outputPipe
     
-    task.standardOutput = pipe
-    task.standardError = pipe
-    task.arguments = ["-cl", command]
-    task.launchPath = "/bin/zsh"
-    task.launch()
+       do{
+           try task.run()
+       } catch {
+           print("error")
+       }
     
-    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-    let output = String(data: data, encoding: .utf8)!
-    
-    return output
-}
+    let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+    let output = String(decoding: outputData, as: UTF8.self)
+    print(output)
+   }
 
 struct ContentView: View {
     var body: some View {
@@ -38,7 +41,7 @@ struct ContentView: View {
                     if let url = object {
                         print("url: \(url)")
                         let url = String(url.absoluteString)
-                        print(shellEnv(String(format: "qhelper/Parser/parser.py %s", url)))
+                        parseSheet(filename: url)
                     }
                 }
                 return true
