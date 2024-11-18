@@ -3,20 +3,75 @@
 import csv
 import datetime
 import json
+import os
 import re
 import sys
+from copy import deepcopy
+
+from dateutil.parser import parse, ParserError
 
 import pandas as pd
 
 from typing import Tuple, List, Optional
 
-CUE_TIME_REGEX = r"^([0-5]?[0-9]):[0-5][0-9].?[0-9]?[0-9]?$"
-CUE_TIME_FORMAT = "%H:%M:%S"
-CUE_TIME_FORMAT_MS = "%H:%M:%S.%f"
+#CUE_TIME_REGEX = r"^([0-5]?[0-9]):[0-5][0-9].?[0-9]?[0-9]?$"
+CUE_TIME_FORMAT = "%M:%S"
+CUE_TIME_FORMAT_MS = "%M:%S.%f"
+CUE_TIME_FORMAT_HOURS = "%H:%M:%S"
+CUE_TIME_FORMAT_HOURS_DECIMAl = "%H:%M.%f"
 
 CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING"]
+EXAMPLE_LABELS = ["EXAMPLE FORM"]
 
 EMPTY_TIME_CELL_TOLERANCE = 2
+
+def find_first_cell_occurences(csv_file: str, labels: List[str]) -> List[Tuple[int, int]]:
+    """
+    Finds the first occurrences of one of the given labels in the given csv file and returns their positions.
+    :param labels: Labels to look for,
+    :return: Positions of the first occurrences of one of the given labels.
+    """
+    found_time_cells = []
+    for label in labels:
+        found_time_cells = find_cell(csv_file, label)
+        if found_time_cells:
+            break
+    return found_time_cells
+
+def remove_example_tables(cue_time_positions: List[Tuple[int, int]], example_positions: List[Tuple[int, int]]):
+    """
+    Removes the example cue tables by cross-checking the rows and columns for the example label position and cue times position.
+
+    :param cue_time_positions: Positions of all "Cue Start Time" cells.
+    :param example_positions: Positions of all "EXAMPLE FORM" cells.
+    :return: Filtered list of cue time positions.
+    """
+    final_cue_times = deepcopy(cue_time_positions)
+
+    for example_position in example_positions:
+        for cue_time_position_index, cue_time_position in enumerate(final_cue_times):
+            if cue_time_position[0] > example_position[0]:
+                final_cue_times.pop(cue_time_position_index)
+                break
+
+    return final_cue_times
+
+def sanitize_cell(cell: str) -> Optional[str]:
+    """
+    Removes any extra characters from a cell, leaving only the time stamp if present.
+
+    :param cell: String representing a cell to be sanitized.
+    :return: Sanitized string or None if the string is an invalid timestamp.
+    """
+    if not isinstance(cell, str):
+        return None
+
+    cell = cell.replace(" ", "")
+    cell = cell.split("-")[0].strip()
+    cell = cell.split(",")[0].strip()
+
+    return cell
+
 
 def save_excel_sheets_as_csv(excel_file: str) -> List[str]:
     """
@@ -44,15 +99,7 @@ def verify_time_cell(time: str) -> Optional[str]:
     :param time: Cell with the time stamp to be converted.
     :return: Time string in the format "%H:%M:%S.%f", or None if the cell is not a valid time stamp.
     """
-    time = time.strip()
-
-    if not isinstance(time, str):
-        return None
-    if "-" in time:
-        time = time.split("-")[0]
-
-    if not re.match(CUE_TIME_REGEX, time):
-        return None
+    time = sanitize_cell(time)
 
     try:
         time_obj = datetime.datetime.strptime(time, CUE_TIME_FORMAT)
@@ -60,9 +107,18 @@ def verify_time_cell(time: str) -> Optional[str]:
         try:
             time_obj = datetime.datetime.strptime(time, CUE_TIME_FORMAT_MS)
         except ValueError:
-            return None
+            try:
+                time_obj = datetime.datetime.strptime(time, CUE_TIME_FORMAT_HOURS)
+                time_stamp = datetime.datetime.strftime(time_obj, CUE_TIME_FORMAT_HOURS_DECIMAl)
+                return time_stamp[:-4]
+            except ValueError:
+                try:
+                    time_obj = parse(time)
+                except ParserError:
+                    return None
 
-    return datetime.datetime.strftime(time_obj, CUE_TIME_FORMAT)
+    time_stamp = datetime.datetime.strftime(time_obj, CUE_TIME_FORMAT_MS)
+    return time_stamp[:-4]
 
 def find_cell(csv_file: str, value: str) -> List[Tuple[int, int]]:
     """
@@ -106,10 +162,11 @@ def parse_times(csv_file: str, times_position: Tuple[int, int]) -> Optional[List
                 if col_num > 1000:
                     break
                 if col_num == target_col_num and row_num > target_row_num:
-                    if not verify_time_cell(cell) and row_num > target_row_num + EMPTY_TIME_CELL_TOLERANCE:
-                        break
-                    if verify_time_cell:
-                        times.append(verify_time_cell(cell))
+                    verified_time = verify_time_cell(cell)
+                    if not verified_time and row_num > target_row_num + EMPTY_TIME_CELL_TOLERANCE:
+                        return times
+                    if verified_time:
+                        times.append(verified_time)
 
     return times
 
@@ -124,16 +181,28 @@ def extract_tables(excel_file: str) -> [List[List[str]]]:
 
     csv_files = save_excel_sheets_as_csv(excel_file)
     for csv_file in csv_files:
+        group_name = csv_file.split(".csv")[0]
         cue_groups = []
-        found_cells = []
-        for label in CUE_TIME_LABELS:
-            found_cells = find_cell(csv_file, label)
-            if found_cells:
-                break
-        for found_cell in found_cells:
+        found_time_cells = find_first_cell_occurences(csv_file, CUE_TIME_LABELS)
+        found_example_cells = find_first_cell_occurences(csv_file, EXAMPLE_LABELS)
+
+        remove_example_tables(found_time_cells, found_example_cells)
+
+        if len(found_time_cells) > 1:
+            time_stamps[group_name] = dict()
+        for found_cell_num, found_cell in enumerate(found_time_cells):
             extracted_times = parse_times(csv_file, found_cell)
             extracted_times = [time for time in extracted_times if time is not None]
-            time_stamps[csv_file] = extracted_times
+            cue_groups.append(extracted_times)
+            if len(found_time_cells) == 1:
+                time_stamps[group_name] = extracted_times
+            else:
+                time_stamps[group_name][f"Part {found_cell_num + 1}"] = extracted_times
+
+        try:
+            os.remove(csv_file)
+        except FileNotFoundError:
+            pass
 
     return time_stamps
 
