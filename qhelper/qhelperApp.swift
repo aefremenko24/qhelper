@@ -13,5 +13,6 @@ struct qhelperApp: App {
         WindowGroup {
             ContentView()
         }
+        .windowResizability(.contentSize)
     }
 }
