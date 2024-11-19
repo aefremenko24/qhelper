@@ -124,6 +124,8 @@ def verify_time_cell(time: str) -> Optional[str]:
                         except ParserError:
                             return None
 
+    #TODO: clean up
+
     time_stamp = datetime.datetime.strftime(time_obj, CUE_TIME_FORMAT_MS)
     return time_stamp[:-4]
 
@@ -195,6 +197,8 @@ def extract_tables(excel_file: str) -> [List[List[str]]]:
 
         found_time_cells = remove_example_tables(found_time_cells, found_example_cells)
 
+        #TODO: skip typos
+
         if len(found_time_cells) > 1:
             time_stamps[group_name] = dict()
         for found_cell_num, found_cell in enumerate(found_time_cells):
@@ -213,7 +217,21 @@ def extract_tables(excel_file: str) -> [List[List[str]]]:
 
     return time_stamps
 
+def sanitize_filepath(filepath: str) -> str:
+    """
+    Sanitizes the path to the Excel file to make it Python-appropriate.
+
+    :param filepath: Path to the Excel file.
+    :return: Sanitized path.
+    """
+    new_path = filepath.replace("file://", "")
+    new_path = new_path.replace("\\", "/")
+    new_path = new_path.replace("%20", " ")
+
+    return new_path
+
 def main(filepath: str) -> str:
+    filepath = sanitize_filepath(filepath)
     return extract_tables(filepath)
 
 if __name__ == "__main__":

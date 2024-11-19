@@ -1,6 +1,6 @@
 .PHONY: setup clean
 
-PIP := pip3.9
+PIP := /usr/local/bin/python3.11 -m pip
 REQ_FILE := requirements.txt
 
 setup: $(REQ_FILE)

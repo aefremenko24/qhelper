@@ -30,13 +30,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		4128E7C22CEBA6B800E5EEE8 /* Exceptions for "qhelper" folder in "qhelper" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Parser/parser.py,
-			);
-			target = 41F5C2C72CEBA03C00721504 /* qhelper */;
-		};
 		4128E7C32CEBA6B800E5EEE8 /* Exceptions for "qhelper" folder in "qhelperUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -44,13 +37,28 @@
 			);
 			target = 41F5C2E22CEBA03D00721504 /* qhelperUITests */;
 		};
+		41B16E072CECFE5B00B1F8DD /* Exceptions for "qhelper" folder in "qhelper" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				Parser/requirements.txt,
+				"Parser/Samples/Aaroh Lighting Cues Form-Fenway.xlsx",
+				"Parser/Samples/Amelia and Emily_Too Sweet.xlsx",
+				"Parser/Samples/Battle Of The ASO's Lighting Cues Form (NASO).xlsx",
+				"Parser/Samples/Candice Cues Fall 2024.xlsx",
+				"Parser/Samples/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx",
+				"Parser/Samples/Tyler Cues Fall 23.xlsx",
+				"Preview Content/Preview Assets.xcassets",
+			);
+			target = 41F5C2C72CEBA03C00721504 /* qhelper */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		41F5C2CA2CEBA03C00721504 /* qhelper */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				4128E7C22CEBA6B800E5EEE8 /* Exceptions for "qhelper" folder in "qhelper" target */,
+				41B16E072CECFE5B00B1F8DD /* Exceptions for "qhelper" folder in "qhelper" target */,
 				4128E7C32CEBA6B800E5EEE8 /* Exceptions for "qhelper" folder in "qhelperUITests" target */,
 			);
 			path = qhelper;

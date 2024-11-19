@@ -12,6 +12,7 @@ struct qhelperApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.dark)
         }
         .windowResizability(.contentSize)
     }
