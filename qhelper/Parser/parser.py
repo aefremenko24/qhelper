@@ -19,13 +19,14 @@ CUE_TIME_FORMAT = "%M:%S"
 CUE_TIME_FORMAT_MS = "%M:%S.%f"
 CUE_TIME_FORMAT_HOURS = "%H:%M:%S"
 CUE_TIME_FORMAT_HOURS_DECIMAl = "%H:%M.%f"
+CUE_TIME_FORMAT_COLONS = "%H:%M:%S:%f"
 
-CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING"]
+CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time"]
 EXAMPLE_LABELS = ["EXAMPLE FORM"]
 
 EMPTY_TIME_CELL_TOLERANCE = 2
 
-def find_first_cell_occurences(csv_file: str, labels: List[str]) -> List[Tuple[int, int]]:
+def find_first_cell_occurrences(csv_file: str, labels: List[str]) -> List[Tuple[int, int]]:
     """
     Finds the first occurrences of one of the given labels in the given csv file and returns their positions.
     :param labels: Labels to look for,
@@ -113,9 +114,15 @@ def verify_time_cell(time: str) -> Optional[str]:
                 return time_stamp[:-4]
             except ValueError:
                 try:
-                    time_obj = parse(time)
-                except ParserError:
-                    return None
+                    time_obj = datetime.datetime.strptime(time, CUE_TIME_FORMAT_COLONS)
+                except ValueError:
+                    try:
+                        time_obj = datetime.datetime.fromtimestamp(float(time))
+                    except ValueError:
+                        try:
+                            time_obj = parse(time)
+                        except ParserError:
+                            return None
 
     time_stamp = datetime.datetime.strftime(time_obj, CUE_TIME_FORMAT_MS)
     return time_stamp[:-4]
@@ -183,10 +190,10 @@ def extract_tables(excel_file: str) -> [List[List[str]]]:
     for csv_file in csv_files:
         group_name = csv_file.split(".csv")[0]
         cue_groups = []
-        found_time_cells = find_first_cell_occurences(csv_file, CUE_TIME_LABELS)
-        found_example_cells = find_first_cell_occurences(csv_file, EXAMPLE_LABELS)
+        found_time_cells = find_first_cell_occurrences(csv_file, CUE_TIME_LABELS)
+        found_example_cells = find_first_cell_occurrences(csv_file, EXAMPLE_LABELS)
 
-        remove_example_tables(found_time_cells, found_example_cells)
+        found_time_cells = remove_example_tables(found_time_cells, found_example_cells)
 
         if len(found_time_cells) > 1:
             time_stamps[group_name] = dict()
@@ -206,7 +213,10 @@ def extract_tables(excel_file: str) -> [List[List[str]]]:
 
     return time_stamps
 
+def main(filepath: str) -> str:
+    return extract_tables(filepath)
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise Exception("Please provide an excel file path.")
-    json.dump(extract_tables(sys.argv[1]), sys.stdout, indent=4)
+    json.dump(main(sys.argv[1]), sys.stdout, indent=4)
