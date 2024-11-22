@@ -41,7 +41,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Assets.xcassets,
-				Parser/requirements.txt,
 				"Parser/Samples/Aaroh Lighting Cues Form-Fenway.xlsx",
 				"Parser/Samples/Amelia and Emily_Too Sweet.xlsx",
 				"Parser/Samples/Battle Of The ASO's Lighting Cues Form (NASO).xlsx",
@@ -49,6 +48,7 @@
 				"Parser/Samples/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx",
 				"Parser/Samples/Tyler Cues Fall 23.xlsx",
 				"Preview Content/Preview Assets.xcassets",
+				requirements.txt,
 			);
 			target = 41F5C2C72CEBA03C00721504 /* qhelper */;
 		};

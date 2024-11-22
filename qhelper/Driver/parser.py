@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.9
-
 import csv
 import datetime
 import json
@@ -229,12 +227,3 @@ def sanitize_filepath(filepath: str) -> str:
     new_path = new_path.replace("%20", " ")
 
     return new_path
-
-def main(filepath: str) -> str:
-    filepath = sanitize_filepath(filepath)
-    return extract_tables(filepath)
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        raise Exception("Please provide an excel file path.")
-    json.dump(main(sys.argv[1]), sys.stdout, indent=4)

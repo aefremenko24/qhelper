@@ -7,27 +7,6 @@
 
 import SwiftUI
 
-func parseSheet(filename: String) {
-    let task = Process()
-    task.executableURL = URL(fileURLWithPath: "/usr/local/bin/python3.11")
-    guard let script = Bundle.main.path(forResource: "parser", ofType: "py") else {
-        fatalError("Couldn't find script")
-    }
-    task.arguments = [script, filename]
-    let outputPipe = Pipe()
-    task.standardOutput = outputPipe
-    
-       do{
-           try task.run()
-       } catch {
-           print("Error running the task:", error)
-       }
-    
-    let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-    let output = String(decoding: outputData, as: UTF8.self)
-    print(output)
-   }
-
 struct ContentView: View {
     var body: some View {
         @State var dropping: Bool = false
