@@ -70,7 +70,7 @@ MAX_NUM_TRIES = 3
 
 # These are QLab application methods used to communicate with workspaces.
 CONNECT_TO_WORKSPACE = "/workspace/{id}/connect"
-DISCONNECT_FROM_WORKSPACE = "/workspace/{id}/disconnect"
+DISCONNECT = "/disconnect"
 SAVE_TO_DISK = "/workspace/{id}/save"
 CREATE_CUE = "/workspace/{id}/new"
 SET_CUE_NAME = "/cue/selected/name"

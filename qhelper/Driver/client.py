@@ -71,16 +71,15 @@ class Client():
         args = [passcode_string]
         self.send_command(method_call, args)
 
-    def disconnect_from_workspace(self, workspace: str) -> None:
+    def disconnect_from_workspace(self) -> None:
         """
-        Disconnect from the given workspace.
-        Should be invoked when no more messages will be sent to the workspace.
+        Disconnect from QLab.
+        Should be invoked when no more messages will be sent to QLab.
 
-        :param workspace: Name of the QLab workspace.
         :throws: UserWarning if the connection to QLab is not established.
         :throws: ConnectionError if failed to disconnect from the workspace.
         """
-        method_call = DISCONNECT_FROM_WORKSPACE.format(id=workspace)
+        method_call = DISCONNECT
         self.send_command(method_call)
 
     def save_to_disk(self, workspace: str) -> None:
