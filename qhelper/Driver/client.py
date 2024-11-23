@@ -1,85 +1,62 @@
 import asyncio
 import json
+from dataclasses import dataclass
 from typing import Any, Optional
-
-import ijson
-
+from pythonosc import udp_client
 from utils import *
 
+@dataclass
 class Client():
 
-    def __init__(self):
-        self.reader: asyncio.StreamReader = None
-        self.writer: asyncio.StreamWriter = None
+    client: udp_client.SimpleUDPClient = None
 
-    async def start_client(self):
+    def start_client(self):
         """
-        Initializes a TCP connection to the server using the DEFAULT_HOST and DEFAULT_PORT
-        and sets self.reader and self.writer to StreamReader and StreamWriter for the opened connection.
-        If the connection cannot be established, tries to initialize a UDP connection using PLAIN_TEXT_PORT.
+        Initializes a UDC connection to the server using the DEFAULT_HOST and DEFAULT_PORT
+        and sets self.client to SimpleUDPCClient for the opened connection.
+        If the connection cannot be established, tries to initialize a UDP connection using PLAIN_TEXT_LISTENING_PORT.
         If both connection attempts are unsuccessful, throws a ConnectionError.
 
-        :mutates: self.reader and self.writer to the StreamReader and StreamWriter for the opened connection.
-        :throws: ConnectionError if neither TCP and UDP connections can be established.
+        :mutates: self.client to store the client used for the current connection.
+        :throws: ConnectionError if neither UDP connections to DEFAULT_PORT and PLAIN_TEXT_LISTENING_PORT can be established.
         """
         try:
-            self.reader, self.writer = await asyncio.open_connection(host=DEFAULT_HOST, port=DEFAULT_PORT)
-            return print(CONNECTION_SUCCESS_MESSAGE.format(host=DEFAULT_HOST, port=DEFAULT_PORT))
+            self.client = udp_client.SimpleUDPClient(DEFAULT_HOST, DEFAULT_LISTENING_PORT)
+            return print(CONNECTION_SUCCESS_MESSAGE.format(host=DEFAULT_HOST, port=DEFAULT_LISTENING_PORT))
         except:
-            print(CONNECTION_FAILURE_MESSAGE.format(port=DEFAULT_PORT))
+            print(CONNECTION_FAILURE_MESSAGE.format(port=DEFAULT_LISTENING_PORT))
             print("Trying the plain text port...")
         try:
-            self.reader, self.writer = await asyncio.open_connection(host=DEFAULT_HOST, port=PLAIN_TEXT_PORT)
-            return print(CONNECTION_SUCCESS_MESSAGE.format(host=DEFAULT_HOST, port=PLAIN_TEXT_PORT))
+            self.client = udp_client.SimpleUDPClient(DEFAULT_HOST, PLAIN_TEXT_LISTENING_PORT)
+            return print(CONNECTION_SUCCESS_MESSAGE.format(host=DEFAULT_HOST, port=PLAIN_TEXT_LISTENING_PORT))
         except:
-            print(CONNECTION_FAILURE_MESSAGE.format(port=PLAIN_TEXT_PORT))
+            print(CONNECTION_FAILURE_MESSAGE.format(port=PLAIN_TEXT_LISTENING_PORT))
             print("Will not attempt to establish a connection anymore.")
             raise ConnectionError
 
-    def send_command(self, command: str) -> None:
+    def send_command(self, command: str, args: list = []) -> None:
         """
         Sends the given command to QLab for a maximum number of tries of MAX_NUM_TRIES.
 
         :param command: Command to send.
+        :param args: Command arguments.
         :raises: UserWarning if this method is called before the connection to QLab is established.
         :raises: ConnectionError if the command cannot be sent after MAX_NUM_TRIES tries.
         """
         num_tries_left = MAX_NUM_TRIES
 
-        if not self.writer:
+        if not self.client:
             raise UserWarning(CONNECTION_NOT_ESTABLISHED_WARNING)
-        while num_tries_left > 0:
+        while num_tries_left:
             try:
-                self.writer.write(serialize(command))
+                self.client.send_message(command, args)
                 return
             except:
                 num_tries_left -= 1
 
-        raise ConnectionError(WRITE_ERROR_MESSAGE.format(command=command))
+        raise ConnectionError(WRITE_ERROR_MESSAGE.format(command=command, args=args))
 
-    async def get_response(self) -> Optional[str]:
-        """
-        Gets response from the QLab connection.
-
-        :return: Response received from QLab.
-        :raises: UserWarning if this method is called before the connection to QLab is established.
-        """
-        num_tries_left = MAX_NUM_TRIES
-
-        if not self.reader:
-            raise UserWarning(CONNECTION_NOT_ESTABLISHED_WARNING)
-        while num_tries_left > 0:
-            try:
-                data = await asyncio.wait_for(self.reader.read(1024), timeout=MAX_RESPONSE_TIME)
-                if not data:
-                    continue
-                return deserialize(data)
-            except:
-                num_tries_left -= 1
-
-        return None
-
-    def connect_to_workspace(self, workspace: str, passcode_string: str = None) -> None:
+    def connect_to_workspace(self, workspace: str, passcode_string: str = "") -> None:
         """
         Establishes a connection to the QLab workspace.
         If the workspace has a passcode, you MUST supply it before any other commands will be accepted by the workspace.
@@ -90,8 +67,9 @@ class Client():
         :throws: UserWarning if the connection to QLab is not established.
         :throws: ConnectionError if failed to connect to the QLab workspace.
         """
-        method_call = CONNECT_TO_WORKSPACE.format(id=workspace, passcode_string=passcode_string)
-        self.send_command(method_call)
+        method_call = CONNECT_TO_WORKSPACE.format(id=workspace)
+        args = [passcode_string]
+        self.send_command(method_call, args)
 
     def disconnect_from_workspace(self, workspace: str) -> None:
         """
@@ -116,65 +94,61 @@ class Client():
         method_call = SAVE_TO_DISK.format(id=workspace)
         self.send_command(method_call)
 
-    async def create_cue(self, workspace: str, cue_type: CueType) -> Optional[int]:
+    def create_cue(self, workspace: str, cue_type: CueType):
         """
         Creates a cue of a given type.
 
         :param workspace: Name of the QLab workspace.
         :param cue_type: Cue type (see CueType enum in utils.py).
-        :return: Unique ID of the new cue.
         """
-        method_call = CREATE_CUE.format(id=workspace, cue_type=cue_type)
-        self.send_command(method_call)
-        cue_number = await self.get_response()
-        if not cue_number:
-            print(READ_ERROR_MESSAGE)
-            return None
-        return int(cue_number)
+        method_call = CREATE_CUE.format(id=workspace)
+        args = [cue_type]
+        self.send_command(method_call, args)
 
-    def set_cue_prewait(self, cue_number: int, time_stamp: str) -> None:
+    def set_cue_prewait(self, time_stamp: str) -> None:
         """
-        Sets the pre-wait time for a given cue.
+        Sets the pre-wait time for the currently selected cue.
 
-        :param cue_number: Unique ID of the cue.
         :param time_stamp: Time stamp of the cue pre-wait time in the format MM:SS.ms
         :throws: UserWarning if the connection to QLab is not established.
         :throws: ConnectionError if failed to connect to the QLab workspace.
         """
-        method_call = SET_CUE_PREWAIT.format(id=cue_number, time_stamp=time_stamp)
-        self.send_command(method_call)
+        method_call = SET_CUE_PREWAIT
+        args = [time_stamp]
+        self.send_command(method_call, args)
 
-    def set_cue_name(self, cue_number: int, name: str) -> None:
+    def set_cue_name(self, name: str) -> None:
         """
-        Sets the name for the given cue.
+        Sets the name for the currently selected cue.
 
         :param cue_number: Unique ID of the cue.
         :param name: Name of the cue as a string.
         """
-        method_call = SET_CUE_NAME.format(id=cue_number, name=name)
-        self.send_command(method_call)
+        method_call = SET_CUE_NAME
+        args = [name]
+        self.send_command(method_call, args)
 
-    async def create_group(self, workspace: str, group_name: str) -> None:
+    def create_group(self, workspace: str, group_name: str) -> None:
         """
         Creates a cue group in the given workspace.
 
         :param workspace: Name of the QLab workspace.
         :param group_name: Name of the cue group.
         """
-        cue_group_number = await self.create_cue(workspace, CueType.GROUP)
-        self.set_cue_name(cue_group_number, group_name)
+        self.create_cue(workspace, CueType.GROUP)
+        self.set_cue_name(group_name)
 
-    async def create_midi_cue(self, workspace: str, pre_wait: str) -> None:
+    def create_midi_cue(self, workspace: str, pre_wait: str) -> None:
         """
         Creates a midi cue with the given pre-wait time in the given workspace.
 
         :param workspace: Name of the QLab workspace.
         :param pre_wait: Pre-wait time for the cue.
         """
-        cue_number = await self.create_cue(workspace, CueType.MIDI_CUE)
-        self.set_cue_prewait(cue_number, pre_wait)
+        self.create_cue(workspace, CueType.MIDI)
+        self.set_cue_prewait(pre_wait)
 
-    async def parse_cue_dict(self, cue_dict: dict, workspace: str) -> None:
+    def parse_cue_dict(self, cue_dict: dict, workspace: str) -> None:
         """
         Parses the dictionary containing QLab cue information and adds the cues to the given QLab workspace.
         For the dictionary to be parsed properly, the keys must represent group names
@@ -185,11 +159,12 @@ class Client():
         :throws: ValueError if the dictionary provided is invalid.
         """
         for key, value in cue_dict.items():
-            await self.create_group(workspace, key)
+            self.create_group(workspace, key)
             if isinstance(value, dict):
-                await self.parse_cue_dict(value, workspace)
-            elif isinstance(value, str):
-                await self.create_midi_cue(workspace, value)
+                self.parse_cue_dict(value, workspace)
+            elif isinstance(value, list):
+                for time_stamp in value:
+                    self.create_midi_cue(workspace, time_stamp)
 
 def serialize(message: Any) -> bytes:
     """

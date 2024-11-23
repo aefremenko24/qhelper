@@ -1,9 +1,11 @@
 import csv
 import datetime
 import json
+import math
 import os
 import re
 import sys
+from audioop import reverse
 from copy import deepcopy
 
 from dateutil.parser import parse, ParserError
@@ -90,6 +92,21 @@ def save_excel_sheets_as_csv(excel_file: str) -> List[str]:
 
     return saved
 
+def convert_to_seconds(time: str) -> float:
+    """
+    Converts the given time string in format MM:SS.ff to seconds.
+
+    :param time: Time string in format MM:SS.ff to be converted.
+    :return: Number of seconds that the given time string represents.
+    """
+    if not time:
+        return None
+    time_chunks = time.split(":")
+    result = 0
+    for chunk_index, chunk in enumerate(reversed(time_chunks)):
+        result += float(chunk) * math.pow(60, chunk_index)
+    return result
+
 
 def verify_time_cell(time: str) -> Optional[str]:
     """
@@ -123,7 +140,6 @@ def verify_time_cell(time: str) -> Optional[str]:
                             return None
 
     #TODO: clean up
-
     time_stamp = datetime.datetime.strftime(time_obj, CUE_TIME_FORMAT_MS)
     return time_stamp[:-4]
 
@@ -169,7 +185,7 @@ def parse_times(csv_file: str, times_position: Tuple[int, int]) -> Optional[List
                 if col_num > 1000:
                     break
                 if col_num == target_col_num and row_num > target_row_num:
-                    verified_time = verify_time_cell(cell)
+                    verified_time = convert_to_seconds(verify_time_cell(cell))
                     if not verified_time and row_num > target_row_num + EMPTY_TIME_CELL_TOLERANCE:
                         return times
                     if verified_time:
