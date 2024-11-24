@@ -53,6 +53,9 @@ func safeShell(_ command: String) throws -> String {
     
 func parseSheet(filename: String) {
     
+    let driver = Python.import("driver")
+    driver.main(filename)
+    
     do {
         try print(safeShell("cd /Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Driver"))
     } catch {
