@@ -38,7 +38,7 @@ def main(filepath: str) -> None:
         client.connect_to_workspace(workspace_name, workspace_passcode)
         client.parse_cue_dict(cue_dict, workspace_name)
         client.save_to_disk(workspace_name)
-        client.disconnect_from_workspace(workspace_name)
+        client.disconnect_from_workspace()
         print(EXIT_SUCCESS_MESSAGE)
     except Exception as e:
         print(EXIT_FAILURE_MESSAGE)

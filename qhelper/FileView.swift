@@ -29,7 +29,7 @@ struct FileView: View {
             Text("\(multiSelection.count) selections")
             
             Button("Process") {
-                files.copyToTemp()
+                files.parseAll()
             }
         }
     }

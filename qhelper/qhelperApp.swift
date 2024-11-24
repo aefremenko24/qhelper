@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import Python
 
 @main
 struct qhelperApp: App {
+    Py_Initialize()
+    
     @State var files: Files = Files()
     
     var body: some Scene {

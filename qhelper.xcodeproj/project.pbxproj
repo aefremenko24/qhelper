@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		41102E602CF2F3140040E980 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41102E5F2CF2F3140040E980 /* SystemConfiguration.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		41F5C2DA2CEBA03D00721504 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		41102E5F2CF2F3140040E980 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		41148B642CF2F24200614C75 /* NumpyConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumpyConversion.swift; sourceTree = "<group>"; };
+		41148B652CF2F24200614C75 /* Python.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Python.swift; sourceTree = "<group>"; };
+		41148B662CF2F24200614C75 /* PythonLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonLibrary.swift; sourceTree = "<group>"; };
+		41148B672CF2F24200614C75 /* PythonLibrary+Symbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PythonLibrary+Symbols.swift"; sourceTree = "<group>"; };
 		41F5C2C82CEBA03C00721504 /* qhelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = qhelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41F5C2D92CEBA03D00721504 /* qhelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = qhelperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		41F5C2E32CEBA03D00721504 /* qhelperUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = qhelperUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -67,6 +76,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41102E602CF2F3140040E980 /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -87,12 +97,34 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		41148B632CF2F24200614C75 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				41102E5F2CF2F3140040E980 /* SystemConfiguration.framework */,
+				41148B682CF2F24200614C75 /* PythonKit */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		41148B682CF2F24200614C75 /* PythonKit */ = {
+			isa = PBXGroup;
+			children = (
+				41148B642CF2F24200614C75 /* NumpyConversion.swift */,
+				41148B652CF2F24200614C75 /* Python.swift */,
+				41148B662CF2F24200614C75 /* PythonLibrary.swift */,
+				41148B672CF2F24200614C75 /* PythonLibrary+Symbols.swift */,
+			);
+			name = PythonKit;
+			path = qhelper/PythonKit;
+			sourceTree = "<group>";
+		};
 		41F5C2BF2CEBA03C00721504 = {
 			isa = PBXGroup;
 			children = (
 				41F5C2CA2CEBA03C00721504 /* qhelper */,
 				41F5C2DC2CEBA03D00721504 /* qhelperTests */,
 				41F5C2E62CEBA03D00721504 /* qhelperUITests */,
+				41148B632CF2F24200614C75 /* Frameworks */,
 				41F5C2C92CEBA03C00721504 /* Products */,
 			);
 			sourceTree = "<group>";

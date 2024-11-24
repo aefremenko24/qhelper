@@ -6,19 +6,7 @@
 //
 
 import Foundation
-
-func secureCopyItem(at srcURL: URL, to dstURL: URL) -> Bool {
-    do {
-        if FileManager.default.fileExists(atPath: dstURL.path) {
-            try FileManager.default.removeItem(at: dstURL)
-        }
-        try FileManager.default.copyItem(at: srcURL, to: dstURL)
-    } catch (let error) {
-        print("Cannot copy item at \(srcURL) to \(dstURL): \(error)")
-        return false
-    }
-    return true
-}
+import PythonKit
 
 class Files: ObservableObject {
     @Published var files: [File] = []
@@ -31,13 +19,11 @@ class Files: ObservableObject {
         self.files = files.filter {$0.id != uuid}
     }
     
-    func copyToTemp() {
-        for file in files {
-            let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(file.name)
-            secureCopyItem(at: URL(fileURLWithPath: file.path), to: tempURL)
+    func parseAll() {
+        files.forEach {
+            parseSheet(filename: $0.path)
         }
     }
-    
 }
 
 struct File: Identifiable, Hashable {
@@ -68,7 +54,7 @@ func safeShell(_ command: String) throws -> String {
 func parseSheet(filename: String) {
     
     do {
-        try print(safeShell("cd /Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Parser"))
+        try print(safeShell("cd /Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Driver"))
     } catch {
         print("Cannot navigate to the Parser directory")
     }
@@ -82,7 +68,7 @@ func parseSheet(filename: String) {
     
     let task = Process()
     task.executableURL = URL(fileURLWithPath: "/usr/local/bin/python3.11")
-    guard let script = Bundle.main.path(forResource: "parser", ofType: "py") else {
+    guard let script = Bundle.main.path(forResource: "driver", ofType: "py") else {
         fatalError("Couldn't find script")
     }
     task.arguments = [script, filename]
