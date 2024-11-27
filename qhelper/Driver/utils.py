@@ -48,7 +48,7 @@ INVALID_WORKSPACE_NAME_PROMPT = "The workspace name must not be empty. Try again
 WORKSPACE_PASSCODE_PROMPT = "Please enter the passcode to your workspace. Press ENTER if no passcode is set: "
 
 # Default host used to connect to QLab workspaces
-DEFAULT_HOST = "10.110.232.163"
+DEFAULT_HOST = "192.168.1.152"
 
 # The default port QLab listens for incoming OSC on.
 # Should be used for all commands sent through TCP and UDP by default.

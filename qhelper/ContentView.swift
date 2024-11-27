@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var files: Files
+    @State var isDisplayingAlert: Bool = false
     
     var body: some View {
         @State var dropping: Bool = false
@@ -23,12 +24,22 @@ struct ContentView: View {
             if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) } ) {
                 let _ = provider.loadObject(ofClass: URL.self) { object, error in
                     if let url = object {
-                        files.add(file: File(path: url.absoluteString, name: url.lastPathComponent))
+                        var newFile = File(path: url.path(percentEncoded: false), name: url.lastPathComponent)
+                        do {
+                            newFile.cue_tables = try parse_excel_file(excel_file: newFile.path)
+                            files.add(file: newFile)
+                        } catch {
+                            isDisplayingAlert = true
+                        }
+                        
                     }
                 }
                 return true
             }
             return false
+        }
+        .alert(isPresented: $isDisplayingAlert) { () -> Alert in
+            Alert(title: Text("Error Processing File"), message: Text("An error occurred while processing the file, make sure it is a valid and not corrupted cue sheet."), dismissButton: .cancel())
         }
     }
 }

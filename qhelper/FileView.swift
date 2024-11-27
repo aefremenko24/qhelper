@@ -8,29 +8,30 @@
 import SwiftUI
 
 struct FileView: View {
-
-    @ObservedObject var files: Files
-    @State private var multiSelection = Set<UUID>()
-
+    
+    @State var file: File
+    
     var body: some View {
-        HStack{
-            NavigationView {
-                List(files.files, selection: $multiSelection) { file in
+        DisclosureGroup(
+            content: {
+                if !file.cue_tables.isEmpty {
+                    ForEach(file.cue_tables) { table in
+                        CueTableView(table: table)
+                    }
+                }
+            },
+            label: {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(file.name)
-                        .contextMenu {
-                            Button(action: {
-                                files.delete(uuid: file.id)
-                            }){
-                                Text("Delete")
-                            }
-                        }
+                        .foregroundColor(.primary)
+                        .font(.headline)
+                    HStack(spacing: 3) {
+                        Label("Number of cue groups: " + String(file.cue_tables.count), systemImage: "list.bullet.indent")
+                    }
+                    .foregroundColor(.secondary)
+                    .font(.subheadline)
                 }
             }
-            Text("\(multiSelection.count) selections")
-            
-            Button("Process") {
-                files.parseAll()
-            }
-        }
+        )
     }
 }
