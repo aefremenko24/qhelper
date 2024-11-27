@@ -25,6 +25,10 @@ struct ContentView: View {
                 let _ = provider.loadObject(ofClass: URL.self) { object, error in
                     if let url = object {
                         var newFile = File(path: url.path(percentEncoded: false), name: url.lastPathComponent)
+                        if url.pathExtension != "xlsx" {
+                            isDisplayingAlert = true
+                            return
+                        }
                         do {
                             newFile.cue_tables = try parse_excel_file(excel_file: newFile.path)
                             files.add(file: newFile)

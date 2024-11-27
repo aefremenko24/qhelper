@@ -18,12 +18,14 @@ struct qhelperApp: App {
                     ContentView(files: files)
                 }
                 .badge(1)
-
+                
                 Tab("Edit", systemImage: "pencil") {
                     FilesView(files: files)
                 }
                 .badge(2)
             }
+            .frame(width: 400, height: 200)
         }
+        .windowResizability(.contentSize)
     }
 }

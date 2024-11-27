@@ -11,8 +11,10 @@ import CoreXLSX
 /**
  Finds the first occurrences of one of the given labels in the given worksheet and returns their Cell objects.
  
- :param labels: Labels to look for.
- :return: Cell objects representing the first occurrences of one of the given labels.
+ - Parameters:
+    - worksheet: Worksheet to use for searching.
+    - labels: Labels to look for.
+ - Returns: Cell objects representing the first occurrences of one of the given labels.
  */
 func find_first_cell_occurrences(worksheet: Worksheet, labels: [String]) -> [Cell] {
     var found_time_cells: [Cell] = []
@@ -28,8 +30,9 @@ func find_first_cell_occurrences(worksheet: Worksheet, labels: [String]) -> [Cel
 /**
  Removes any extra characters from a cell, leaving only the time stamp if present.
 
- :param cell: String representing a cell to be sanitized.
- :return: Sanitized string containing only the time stamp to be used for QLab.
+ - Parameters:
+    - cell: String representing a cell to be sanitized.
+ - Returns: Sanitized string containing only the time stamp to be used for QLab.
  */
 func sanitize_cell(cell: String) -> String {
     var cell_copy = cell
@@ -47,8 +50,9 @@ func sanitize_cell(cell: String) -> String {
 /**
  Converts the given time string in format MM:SS.ff to seconds.
 
- :param time: Time string in format MM:SS.ff to be converted.
- :return: Number of seconds that the given time string represents.
+ - Parameters:
+    - time: Time string in format MM:SS.ff to be converted.
+ - Returns: Number of seconds that the given time string represents.
  */
 func convert_to_seconds(time: String) -> Float {
     var reversed_time_chunks: [String] = time.components(separatedBy: ":").reversed()
@@ -62,8 +66,9 @@ func convert_to_seconds(time: String) -> Float {
 /**
  Verifies that the given cell contains a valid time stamp and returns its Float represenation in seconds if so.
 
- :param time: Cell with the time stamp to be converted.
- :return: Number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
+ - Parameters:
+    - time: Cell with the time stamp to be converted.
+ - Returns: Number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
  */
 func verify_time_cell(time_cell: Cell) -> Optional<CueTime> {
     if time_cell.value == nil {
@@ -81,9 +86,10 @@ func verify_time_cell(time_cell: Cell) -> Optional<CueTime> {
 /**
  Finds the rows and columns of all cells with the specified value.
 
- :param find_cell: Excel worksheet file to search in.
- :param value: Value to search for (will be cast to string for comparison).
- :return: Cells matching the given value.
+ - Parameters:
+    - find_cell: Excel worksheet file to search in.
+    - value: Value to search for (will be cast to string for comparison).
+ - Returns: Cells matching the given value.
  */
 func find_cell(worksheet: Worksheet, value: String) -> [Cell] {
     var coordinates: [Cell] = []
@@ -101,8 +107,9 @@ func find_cell(worksheet: Worksheet, value: String) -> [Cell] {
 /**
  Excracts all the time stamps from the given Excel worksheet.
  
- :param worksheet: Excel worksheet.
- :return: list of timestamps in number of seconds
+ - Parameters:
+    - worksheet: Excel worksheet.
+ - Returns: list of timestamps in number of seconds
  */
 func exctact_times(worksheet: Worksheet) -> [CueTime] {
     var time_stamps: [CueTime] = []
@@ -122,8 +129,9 @@ func exctact_times(worksheet: Worksheet) -> [CueTime] {
 /**
  Extract all worksheets from the given Excel file.
 
- :param excel_file: Excel file path.
- :return: List of tuples, each containing the name of the worksheet and the worksheet itself as a Worksheet object.
+ - Parameters:
+    - excel_file: Excel file path.
+ - Returns: List of tuples, each containing the name of the worksheet and the worksheet itself as a Worksheet object.
  */
 func extract_worksheets(excel_file: String) throws -> [(name: String, worksheet: Worksheet)] {
     
@@ -151,8 +159,9 @@ func extract_worksheets(excel_file: String) throws -> [(name: String, worksheet:
 /**
  Parses the given Excel file and returns a list of cue tables found in the workbook.
  
- :param excel_file: Excel file path.
- :return: List of all cue tables found in the workbook.
+ - Parameters:
+    - excel_file: Excel file path.
+ - Returns: List of all cue tables found in the workbook.
  */
 func parse_excel_file(excel_file: String) throws -> [CueTable] {
     var result: [CueTable] = []

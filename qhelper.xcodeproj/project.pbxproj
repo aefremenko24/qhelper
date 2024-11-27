@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		41102E602CF2F3140040E980 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41102E5F2CF2F3140040E980 /* SystemConfiguration.framework */; };
 		413C832D2CF55445000E6859 /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = 413C832C2CF55445000E6859 /* CoreXLSX */; };
+		4177740B2CF7C957004FA3E0 /* OSCKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4177740A2CF7C957004FA3E0 /* OSCKit */; };
+		4177740D2CF7C957004FA3E0 /* OSCKitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4177740C2CF7C957004FA3E0 /* OSCKitCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,18 +42,18 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Assets.xcassets,
-				"Driver/__pycache__/client.cpython-311.pyc",
-				"Driver/__pycache__/parser.cpython-311.pyc",
-				"Driver/__pycache__/server.cpython-311.pyc",
-				"Driver/__pycache__/utils.cpython-311.pyc",
-				"Driver/Samples/Aaroh Lighting Cues Form-Fenway.xlsx",
-				"Driver/Samples/Amelia and Emily_Too Sweet.xlsx",
-				"Driver/Samples/Battle Of The ASO's Lighting Cues Form (NASO).xlsx",
-				"Driver/Samples/Candice Cues Fall 2024.xlsx",
-				"Driver/Samples/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx",
-				"Driver/Samples/Tyler Cues Fall 23.xlsx",
 				"Preview Content/Preview Assets.xcassets",
-				requirements.txt,
+				"Python Driver/__pycache__/client.cpython-311.pyc",
+				"Python Driver/__pycache__/parser.cpython-311.pyc",
+				"Python Driver/__pycache__/server.cpython-311.pyc",
+				"Python Driver/__pycache__/utils.cpython-311.pyc",
+				"Python Driver/requirements.txt",
+				"Python Driver/Samples/Aaroh Lighting Cues Form-Fenway.xlsx",
+				"Python Driver/Samples/Amelia and Emily_Too Sweet.xlsx",
+				"Python Driver/Samples/Battle Of The ASO's Lighting Cues Form (NASO).xlsx",
+				"Python Driver/Samples/Candice Cues Fall 2024.xlsx",
+				"Python Driver/Samples/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx",
+				"Python Driver/Samples/Tyler Cues Fall 23.xlsx",
 			);
 			target = 41F5C2C72CEBA03C00721504 /* qhelper */;
 		};
@@ -83,7 +85,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4177740D2CF7C957004FA3E0 /* OSCKitCore in Frameworks */,
 				413C832D2CF55445000E6859 /* CoreXLSX in Frameworks */,
+				4177740B2CF7C957004FA3E0 /* OSCKit in Frameworks */,
 				41102E602CF2F3140040E980 /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -155,6 +159,8 @@
 			name = qhelper;
 			packageProductDependencies = (
 				413C832C2CF55445000E6859 /* CoreXLSX */,
+				4177740A2CF7C957004FA3E0 /* OSCKit */,
+				4177740C2CF7C957004FA3E0 /* OSCKitCore */,
 			);
 			productName = qhelper;
 			productReference = 41F5C2C82CEBA03C00721504 /* qhelper.app */;
@@ -240,6 +246,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				413C82A12CF552EF000E6859 /* XCRemoteSwiftPackageReference "CoreXLSX" */,
+				417774092CF7C957004FA3E0 /* XCRemoteSwiftPackageReference "OSCKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 41F5C2C92CEBA03C00721504 /* Products */;
@@ -609,12 +616,30 @@
 				minimumVersion = 0.14.2;
 			};
 		};
+		417774092CF7C957004FA3E0 /* XCRemoteSwiftPackageReference "OSCKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/orchetect/OSCKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		413C832C2CF55445000E6859 /* CoreXLSX */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = CoreXLSX;
+		};
+		4177740A2CF7C957004FA3E0 /* OSCKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 417774092CF7C957004FA3E0 /* XCRemoteSwiftPackageReference "OSCKit" */;
+			productName = OSCKit;
+		};
+		4177740C2CF7C957004FA3E0 /* OSCKitCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 417774092CF7C957004FA3E0 /* XCRemoteSwiftPackageReference "OSCKit" */;
+			productName = OSCKitCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

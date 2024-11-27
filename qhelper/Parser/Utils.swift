@@ -8,6 +8,39 @@
 import Foundation
 import CoreXLSX
 
+class Files: ObservableObject {
+    @Published var files: [File] = []
+    
+    func add(file: File) {
+        files.append(file)
+    }
+    
+    func delete(uuid: UUID) {
+        self.files = files.filter {$0.id != uuid}
+    }
+    
+    func get_all_cue_tables() -> [CueTable] {
+        var cue_tables: [CueTable] = []
+        for file in files {
+            cue_tables.append(contentsOf: file.cue_tables)
+        }
+        return cue_tables
+    }
+}
+
+class File: Identifiable, ObservableObject {
+    init(path: String, name: String) {
+        self.path = path
+        self.name = name
+    }
+    
+    let path: String
+    let name: String
+    let id = UUID()
+    var is_expanded: Bool = false
+    var cue_tables: [CueTable] = []
+}
+
 struct CueTime: Hashable, Identifiable {
     let asString: String
     let value: Float
@@ -79,19 +112,19 @@ let INVALID_WORKSPACE_NAME_PROMPT = "The workspace name must not be empty. Try a
 let WORKSPACE_PASSCODE_PROMPT = "Please enter the passcode to your workspace. Press ENTER if no passcode is set: "
 
 // Default host used to connect to QLab workspaces
-let DEFAULT_HOST = "10.110.232.163"
+let DEFAULT_HOST = "192.168.1.152"
 
 // The default port QLab listens for incoming OSC on.
 // Should be used for all commands sent through TCP and UDP by default.
-let DEFAULT_LISTENING_PORT = 53000
+let DEFAULT_LISTENING_PORT: UInt16 = 53000
 
 // The default port QLab sends UDP responses to.
 // Should be used to receive responses to requests sent to DEFAULT_LISTENING_PORT
-let DEFAULT_RESPONSE_PORT = 53001
+let DEFAULT_RESPONSE_PORT: UInt16 = 53001
 
 // The UDP port on which QLab listens to plain text and attempts to interpret it as OSC.
 // Should be used as a back-up, when the default port connection fails.
-let PLAIN_TEXT_LISTENING_PORT = 53535
+let PLAIN_TEXT_LISTENING_PORT: UInt16 = 53535
 
 // Maximum number of seconds the client will wait for a response from QLab.
 let MAX_RESPONSE_TIME = 2.0
@@ -100,9 +133,9 @@ let MAX_RESPONSE_TIME = 2.0
 let MAX_NUM_TRIES = 3
 
 // These are QLab application methods used to communicate with workspaces.
-let CONNECT_TO_WORKSPACE = "/workspace/{id}/connect"
+let CONNECT_TO_WORKSPACE = "/workspace/%@/connect"
 let DISCONNECT = "/disconnect"
-let SAVE_TO_DISK = "/workspace/{id}/save"
-let CREATE_CUE = "/workspace/{id}/new"
+let SAVE_TO_DISK = "/workspace/%@/save"
+let CREATE_CUE = "/workspace/%@/new"
 let SET_CUE_NAME = "/cue/selected/name"
 let SET_CUE_PREWAIT = "/cue/selected/preWait"
