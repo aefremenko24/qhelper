@@ -30,7 +30,9 @@ struct ContentView: View {
                             return
                         }
                         do {
-                            newFile.cue_tables = try parse_excel_file(excel_file: newFile.path)
+                            var parser = Parser(file_path: newFile.path)
+                            try parser.set_shared_strings()
+                            newFile.cue_tables = try parser.parse_excel_file()
                             files.add(file: newFile)
                         } catch {
                             isDisplayingAlert = true
