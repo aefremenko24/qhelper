@@ -11,14 +11,29 @@ import CoreXLSX
 class Files: ObservableObject {
     @Published var files: [File] = []
     
+    /**
+     Adds a file to the list of files.
+     
+     - Parameter file: File object to be added.
+     */
     func add(file: File) {
         files.append(file)
     }
     
+    /**
+     Deletes a file from the list of files given its UUID.
+     
+     - Parameter uuid: Unique UUID of the file to be deleted.
+     */
     func delete(uuid: UUID) {
         self.files = files.filter {$0.id != uuid}
     }
     
+    /**
+     Returns all CueTable objects stored by all the files in this Files object.
+     
+     - Returns: List of all cue tables in this object.
+     */
     func get_all_cue_tables() -> [CueTable] {
         var cue_tables: [CueTable] = []
         for file in files {
@@ -49,15 +64,26 @@ struct CueTime: Hashable, Identifiable {
 
 struct CueTable: Hashable, Identifiable {
     var name: String
+    var header_cell: CellReference
     var times: [CueTime]
     let id = UUID()
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(header_cell.row.hashValue)
+        hasher.combine(header_cell.column.value)
+    }
+
+    static func == (lhs: CueTable, rhs: CueTable) -> Bool {
+        return lhs.header_cell.row == rhs.header_cell.row
+        && lhs.name == rhs.name
+    }
 }
 
 enum Errors: Error {
     case runtimeError(String)
 }
 
-let time_stamp_regex = /(([0-5]\d:){0,3})?(\d+(\.\d*)?)/
+let time_stamp_regex = /(([0-5]?\d\W){1,3})(\d+(\.\d*)?)/
 
 enum CueType: String {
     case AUDIO = "audio"
@@ -93,9 +119,10 @@ enum CueType: String {
     case CUE_CART = "cue cart"
 }
 
-let CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time"]
+let CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time", "Time Stamp", "Time *Example MM:SS:MS*"]
 let EXAMPLE_LABELS = ["EXAMPLE FORM"]
 let EMPTY_TIME_CELL_TOLERANCE: Int = 2
+let TYPICAL_CUE_TABLE_LENGTH: Int = 10
 
 let CONNECTION_SUCCESS_MESSAGE = "You are connected to QLab. Host: {host}, Port: {port}"
 let CONNECTION_FAILURE_MESSAGE = "Failed to connect to the server using port {port}."
@@ -139,3 +166,61 @@ let SAVE_TO_DISK = "/workspace/%@/save"
 let CREATE_CUE = "/workspace/%@/new"
 let SET_CUE_NAME = "/cue/selected/name"
 let SET_CUE_PREWAIT = "/cue/selected/preWait"
+
+extension String {
+    /**
+     Converts this String in a format HH:MM:SS.ff to a number of seconds as a Float that this String represents.
+     */
+    func convertToTimeInterval() -> Float {
+        guard self != "" else {
+            return 0
+        }
+
+        var interval: Float = 0
+
+        var parts = self.components(separatedBy: ":")
+        var smallest_divison: Float = try Float(parts.last!) ?? 0
+        if parts.count > 2 && smallest_divison == floor(smallest_divison) {
+            parts.removeLast()
+            parts[parts.count - 1] = String(Float(parts[parts.count - 1])! + smallest_divison / 100)
+        }
+        for (index, part) in parts.reversed().enumerated() {
+            interval += (Float(part) ?? 0) * pow(Float(60), Float(index))
+        }
+        
+        return Float(round(100 * interval) / 100)
+    }
+}
+
+extension Float {
+    /**
+     Converts the Float representing the time in seconds to its string representation in the format MM:SS.ff.
+     */
+    func toTimeElapsed() -> String {
+        let decimal: Float = self - floor(self)
+        let copy = Int(floor(self))
+        let minutes = (copy % 3600) / 60
+        let seconds = Float((copy % 3600) % 60) + decimal
+        return String(format: "%02d:%05.2f", minutes, seconds)
+    }
+}
+
+extension Date {
+    /**
+     Converts a CSV-standard DateTime object into a proper string representation. Here, 1899-12-30 00:00:00 is taken as a reference time.
+     
+     - Returns: Standard QLab String representation in format 00:00.00
+     */
+    func toTimeElapsed() -> String {
+        let dateFormatter = DateFormatter()
+        let calendar = Calendar.current
+        dateFormatter.dateFormat = "yyyy-mm-dd HH:mm:ss"
+        let reference = dateFormatter.date(from: "1899-12-30 00:00:00")!
+        let referenceComponents = calendar.dateComponents([.hour, .minute, .second], from: reference)
+        let timeComponents = calendar.dateComponents([.hour, .minute, .second], from: self)
+
+        let difference = calendar.dateComponents([.hour, .minute, .second], from: referenceComponents, to: timeComponents)
+        
+        return "\(difference.hour!):\(difference.minute!):\(difference.second!)"
+    }
+}

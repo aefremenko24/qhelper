@@ -9,168 +9,301 @@ import Foundation
 import CoreXLSX
 
 /**
- Finds the first occurrences of one of the given labels in the given worksheet and returns their Cell objects.
- 
- - Parameters:
-    - worksheet: Worksheet to use for searching.
-    - labels: Labels to look for.
- - Returns: Cell objects representing the first occurrences of one of the given labels.
+ An object that should be initialized for every XLSX file being parsed. contains the absolute path to the file and its shared strings.
  */
-func find_first_cell_occurrences(worksheet: Worksheet, labels: [String]) -> [Cell] {
-    var found_time_cells: [Cell] = []
-    for label in labels {
-        found_time_cells = find_cell(worksheet: worksheet, value: label)
-        if found_time_cells.count > 0 {
-            break
+class Parser {
+    let file_path: String
+    var shared_strings: SharedStrings? = nil
+    
+    init(file_path: String) {
+        self.file_path = file_path
+    }
+    
+    /**
+     Computes the shared strings in this XLSX file and sets them in the self.shared_strings field.
+     
+     - Mutates: self.shared_strings.
+     */
+    func set_shared_strings() throws {
+        self.shared_strings = try self.get_shared_strings(excel_file: self.file_path)
+    }
+    
+    /**
+     Finds the first occurrences of one of the given labels in the given worksheet and returns their Cell objects.
+     
+     - Parameters:
+         - worksheet: Worksheet to use for searching.
+         - labels: Labels to look for.
+     - Returns: Cell objects representing the first occurrences of one of the given labels.
+     */
+    func find_first_cell_occurrences(worksheet: Worksheet, labels: [String]) -> [Cell] {
+        var found_time_cells: [Cell] = []
+        for label in labels {
+            found_time_cells = find_cell(worksheet: worksheet, value: label)
+            if found_time_cells.count > 0 {
+                break
+            }
+        }
+        return found_time_cells
+    }
+    
+    /**
+     Removes any extra characters from a cell, leaving only the time stamp if present.
+     
+     - Parameters:
+        - cell: String representing a cell to be sanitized.
+     - Returns: Pre-sanitized string containing only the time stamp to be used for QLab.
+     */
+    func pre_sanitize_cell(cell: String) -> String {
+        var cell_copy = cell
+        if (cell_copy.contains(" ")) {
+            cell_copy = cell_copy.components(separatedBy: " ")[0]
+        }
+        if (cell_copy.contains(",")) {
+            cell_copy = cell_copy.components(separatedBy: ",")[0]
+        }
+        cell_copy = cell_copy.trimmingCharacters(in: .whitespacesAndNewlines)
+        return cell_copy
+    }
+    
+    /**
+     Replaces characters between digits, like -, with : to match the QLab display format.
+     
+     - Parameters:
+        - cell: String representing a cell to be sanitized.
+     - Returns: Post-sanitized string containing only the time stamp to be used for QLab.
+     */
+    func post_sanitize_cell(cell: String) -> String {
+        var cell_copy = cell
+        cell_copy = cell_copy.replacingOccurrences(of: "[^0123456789.:]", with: ":", options: .regularExpression)
+        return cell_copy
+    }
+    
+    /**
+     Verifies that the given cell contains a valid time stamp and returns its Float represenation in seconds if so.
+     
+     - Parameters:
+        - time: Cell with the time stamp to be converted.
+     - Returns:CueTime object containing information about the number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
+     */
+    func verify_time_cell(time_cell: Cell) -> Optional<CueTime> {
+        if time_cell.value == nil {
+            return nil
+        }
+        if time_cell.dateValue != nil {
+            return self.verify_date_cell(date_cell: time_cell)
+        }
+        return self.verify_time_string(time_string: time_cell.stringValue(shared_strings!)!)
+    }
+    
+    /**
+     Verifies that the given string is a float number in a format 123.345.
+        
+     - Parameters:
+        - time_cell: Cell string containing a float in a format 123.345
+     - Returns:CueTime object containing information about the number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
+     */
+    func verify_float_string(time_cell: String) -> Optional<CueTime> {
+        if let mFloat = Float(time_cell) {
+            return CueTime(asString: mFloat.toTimeElapsed(), value: mFloat)
+        } else {
+            return nil
         }
     }
-    return found_time_cells
-}
-
-/**
- Removes any extra characters from a cell, leaving only the time stamp if present.
-
- - Parameters:
-    - cell: String representing a cell to be sanitized.
- - Returns: Sanitized string containing only the time stamp to be used for QLab.
- */
-func sanitize_cell(cell: String) -> String {
-    var cell_copy = cell
-    cell_copy.replace(" ", with: "")
-    if (cell_copy.contains("-")) {
-        cell_copy = cell_copy.components(separatedBy: "-")[0]
+    
+    /**
+     Converts the DateTime formatted cell to a proper CueTime representation.
+     
+     - Parameters:
+        - date_cell: Cell containing a dateValue.
+     - Returns:CueTime object containing information about the number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
+     */
+    func verify_date_cell(date_cell: Cell) -> Optional<CueTime> {
+        if date_cell.value == nil {
+            return nil
+        }
+        let string_representation = date_cell.dateValue?.toTimeElapsed()
+        if string_representation == nil {
+            return nil
+        }
+        
+        return verify_time_string(time_string: string_representation!)
     }
-    if (cell_copy.contains(",")) {
-        cell_copy = cell_copy.components(separatedBy: ",")[0]
-    }
-    cell_copy = cell_copy.trimmingCharacters(in: .whitespacesAndNewlines)
-    return cell_copy
-}
-
-/**
- Converts the given time string in format MM:SS.ff to seconds.
-
- - Parameters:
-    - time: Time string in format MM:SS.ff to be converted.
- - Returns: Number of seconds that the given time string represents.
- */
-func convert_to_seconds(time: String) -> Float {
-    var reversed_time_chunks: [String] = time.components(separatedBy: ":").reversed()
-    var result: Float = 0
-    for chunk_index in reversed_time_chunks.count - 1 ... 0 {
-        result += Float(reversed_time_chunks[chunk_index])! * Float(exactly: pow(60, chunk_index) as NSNumber)!
-    }
-    return result
-}
-
-/**
- Verifies that the given cell contains a valid time stamp and returns its Float represenation in seconds if so.
-
- - Parameters:
-    - time: Cell with the time stamp to be converted.
- - Returns: Number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
- */
-func verify_time_cell(time_cell: Cell) -> Optional<CueTime> {
-    if time_cell.value == nil {
+    
+    /**
+     Verifies that the given string contains a valid time stamp and returns its Float represenation in seconds if so.
+     
+     - Parameters:
+     - time: String with the time stamp to be converted.
+     - Returns: Number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
+     */
+    func verify_time_string(time_string: String) -> Optional<CueTime> {
+        var string_representation: String = self.pre_sanitize_cell(cell: time_string)
+        let time_cell_format = Regex(time_stamp_regex)
+        if let match = string_representation.firstMatch(of: time_cell_format) {
+            var matched_string_representation = String(string_representation[match.range])
+            if string_representation != matched_string_representation {
+                return verify_float_string(time_cell: time_string)
+            } else {
+                matched_string_representation = self.post_sanitize_cell(cell: matched_string_representation)
+            }
+            let time_interval = matched_string_representation.convertToTimeInterval()
+            return CueTime(asString: time_interval.toTimeElapsed(), value: time_interval)
+        }
         return nil
     }
-    var string_representation: String = time_cell.value!
-    let time_cell_format = Regex(time_stamp_regex)
-    if let match = string_representation.firstMatch(of: time_cell_format) {
-        string_representation = String(string_representation[match.range])
-        return CueTime(asString: string_representation, value: convert_to_seconds(time: string_representation))
-    }
-    return nil
-}
 
-/**
- Finds the rows and columns of all cells with the specified value.
 
- - Parameters:
-    - find_cell: Excel worksheet file to search in.
-    - value: Value to search for (will be cast to string for comparison).
- - Returns: Cells matching the given value.
- */
-func find_cell(worksheet: Worksheet, value: String) -> [Cell] {
-    var coordinates: [Cell] = []
-    
-    for row in worksheet.data?.rows ?? [] {
-        for c in row.cells {
-            if c.value == value {
-                coordinates.append(c)
+    /**
+     Finds the rows and columns of all cells with the specified value.
+
+     - Parameters:
+        - find_cell: Excel worksheet file to search in.
+        - value: Value to search for (will be cast to string for comparison).
+     - Returns: Cells matching the given value.
+     */
+    func find_cell(worksheet: Worksheet, value: String) -> [Cell] {
+        var coordinates: [Cell] = []
+        
+        for row in worksheet.data?.rows ?? [] {
+            for c in row.cells {
+                if c.stringValue(shared_strings!) == value {
+                    coordinates.append(c)
+                }
             }
         }
+        return coordinates
     }
-    return coordinates
-}
 
-/**
- Excracts all the time stamps from the given Excel worksheet.
- 
- - Parameters:
-    - worksheet: Excel worksheet.
- - Returns: list of timestamps in number of seconds
- */
-func exctact_times(worksheet: Worksheet) -> [CueTime] {
-    var time_stamps: [CueTime] = []
-    
-    for row in worksheet.data?.rows ?? [] {
-        for c in row.cells {
-            let time_stamp = verify_time_cell(time_cell: c)
-            if time_stamp != nil {
-                time_stamps.append(time_stamp!)
+    /**
+     Excracts the time stamps corresponding to the given reference "Cue Start Time" cell.
+     
+     - Parameters:
+        - worksheet: Excel worksheet.
+     - Returns: list of timestamps in number of seconds
+     */
+    func exctact_times(worksheet: Worksheet, reference: CellReference) -> [CueTime] {
+        var time_stamps: [CueTime] = []
+        var remaining_tolerance = EMPTY_TIME_CELL_TOLERANCE
+        
+        for row in worksheet.data?.rows ?? [] {
+            for c in row.cells {
+                if c.reference.column.value == reference.column.value
+                    && c.reference.row > reference.row {
+                    let time_stamp = verify_time_cell(time_cell: c)
+                    if time_stamp != nil {
+                        time_stamps.append(time_stamp!)
+                        remaining_tolerance = EMPTY_TIME_CELL_TOLERANCE
+                    } else if remaining_tolerance > 0 {
+                        remaining_tolerance -= 1
+                    } else {
+                        return time_stamps
+                    }
+                }
             }
         }
+        
+        return time_stamps
+    }
+
+    /**
+     Extract all worksheets from the given Excel file.
+
+     - Parameters:
+        - excel_file: Excel file path.
+     - Returns: List of tuples, each containing the name of the worksheet and the worksheet itself as a Worksheet object.
+     */
+    func extract_worksheets(excel_file: String) throws -> [(name: String, worksheet: Worksheet)] {
+        
+        guard let file = XLSXFile(filepath: excel_file) else {
+            throw Errors.runtimeError("XLSX file at \(excel_file) is corrupted or does not exist")
+        }
+        
+        let sharedStrings = try file.parseSharedStrings()
+        
+        var worksheets: [(String, Worksheet)] = []
+        
+        do {
+            for wbk in try file.parseWorkbooks() {
+                for (name, path) in try file.parseWorksheetPathsAndNames(workbook: wbk) {
+                    let worksheetName = name
+                    let worksheet = try file.parseWorksheet(at: path)
+                    worksheets.append((worksheetName!, worksheet))
+                }
+            }
+        } catch {
+            fatalError("Error parsing Excel file: \(error)")
+        }
+        
+        return worksheets
+    }
+
+
+    /**
+     Returns the shared strings for the given Excel file.
+     
+     - Parameters:
+        - excel_file: Absolute path to the Excel file.
+     - Returns: SharedStrings object containing the shared strings in the file.
+     */
+    func get_shared_strings(excel_file: String) throws -> SharedStrings {
+        guard let file = XLSXFile(filepath: excel_file) else {
+            throw Errors.runtimeError("XLSX file at \(excel_file) is corrupted or does not exist")
+        }
+        
+        guard let shared_strings = try file.parseSharedStrings() else {
+            throw Errors.runtimeError("XLSX file at \(excel_file) is corrupted or does not exist")
+        }
+        
+        return shared_strings
     }
     
-    return time_stamps
-}
+    /**
+     Removes the example cue tables by cross-checking the rows and columns for the example label position and cue times position.
 
-/**
- Extract all worksheets from the given Excel file.
-
- - Parameters:
-    - excel_file: Excel file path.
- - Returns: List of tuples, each containing the name of the worksheet and the worksheet itself as a Worksheet object.
- */
-func extract_worksheets(excel_file: String) throws -> [(name: String, worksheet: Worksheet)] {
-    
-    guard let file = XLSXFile(filepath: excel_file) else {
-        throw Errors.runtimeError("XLSX file at \(excel_file) is corrupted or does not exist")
-    }
-    
-    var worksheets: [(String, Worksheet)] = []
-    
-    do {
-        for wbk in try file.parseWorkbooks() {
-            for (name, path) in try file.parseWorksheetPathsAndNames(workbook: wbk) {
-                let worksheetName = name
-                let worksheet = try file.parseWorksheet(at: path)
-                worksheets.append((worksheetName!, worksheet))
+     - Parameters:
+        - header_cells: All "Cue Start Time" cells.
+        - example_headers: All "EXAMPLE FORM" cells.
+     - Returns: Filtered header cells.
+     */
+    func remove_example_headers(header_cells: [Cell], example_headers: [Cell]) -> [Cell] {
+        var final_cue_headers: [Cell] = header_cells
+        
+        for example_cell in example_headers {
+            for (cue_time_cell_index, cue_time_cell) in final_cue_headers.enumerated() {
+                if cue_time_cell.reference.row > example_cell.reference.row {
+                    final_cue_headers.remove(at: cue_time_cell_index)
+                    break
+                }
             }
         }
-    } catch {
-        fatalError("Error parsing Excel file: \(error)")
+        
+        return final_cue_headers
     }
     
-    return worksheets
-}
-
-/**
- Parses the given Excel file and returns a list of cue tables found in the workbook.
- 
- - Parameters:
-    - excel_file: Excel file path.
- - Returns: List of all cue tables found in the workbook.
- */
-func parse_excel_file(excel_file: String) throws -> [CueTable] {
-    var result: [CueTable] = []
-    
-    let worksheets: [(name: String, worksheet: Worksheet)] = try extract_worksheets(excel_file: excel_file)
-    for worksheet in worksheets {
-        var cueTable = CueTable(name: worksheet.name, times: exctact_times(worksheet: worksheet.worksheet))
-        result.append(cueTable)
+    /**
+     Parses the given Excel file and returns a list of cue tables found in the workbook.
+     
+     - Parameters:
+        - excel_file: Excel file path.
+     - Returns: List of all cue tables found in the workbook.
+     */
+    func parse_excel_file() throws -> [CueTable] {
+        var result: [CueTable] = []
+        
+        let worksheets: [(name: String, worksheet: Worksheet)] = try extract_worksheets(excel_file: self.file_path)
+        for worksheet in worksheets {
+            var initial_header_cells = find_first_cell_occurrences(worksheet: worksheet.worksheet, labels: CUE_TIME_LABELS)
+            let example_headers = find_first_cell_occurrences(worksheet: worksheet.worksheet, labels: EXAMPLE_LABELS)
+            let header_cells = remove_example_headers(header_cells: initial_header_cells, example_headers: example_headers)
+            for header_cell in header_cells {
+                let extracted_times = exctact_times(worksheet: worksheet.worksheet, reference: header_cell.reference)
+                if extracted_times.isEmpty { continue }
+                let cueTable = CueTable(name: worksheet.name, header_cell: header_cell.reference, times: extracted_times)
+                result.append(cueTable)
+            }
+        }
+        
+        return result
     }
-    
-    return result
 }

@@ -32,7 +32,6 @@ class Client {
         let msg = OSCMessage(command, values: args)
         do {
             try self.oscClient.send(msg, to: self.host, port: self.port)
-            print("Sent command: \(msg)")
         } catch let err {
             print("error: \(err)")
         }

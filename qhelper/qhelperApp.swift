@@ -24,7 +24,6 @@ struct qhelperApp: App {
                 }
                 .badge(2)
             }
-            .frame(width: 400, height: 200)
         }
         .windowResizability(.contentSize)
     }

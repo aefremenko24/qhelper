@@ -48,12 +48,6 @@
 				"Python Driver/__pycache__/server.cpython-311.pyc",
 				"Python Driver/__pycache__/utils.cpython-311.pyc",
 				"Python Driver/requirements.txt",
-				"Python Driver/Samples/Aaroh Lighting Cues Form-Fenway.xlsx",
-				"Python Driver/Samples/Amelia and Emily_Too Sweet.xlsx",
-				"Python Driver/Samples/Battle Of The ASO's Lighting Cues Form (NASO).xlsx",
-				"Python Driver/Samples/Candice Cues Fall 2024.xlsx",
-				"Python Driver/Samples/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx",
-				"Python Driver/Samples/Tyler Cues Fall 23.xlsx",
 			);
 			target = 41F5C2C72CEBA03C00721504 /* qhelper */;
 		};
