@@ -85,7 +85,7 @@ enum Errors: Error {
 
 let time_stamp_regex = /(([0-5]?\d\W){1,3})(\d+(\.\d*)?)/
 
-enum CueType: String {
+enum CueType: String, CaseIterable, Hashable, Codable, Identifiable {
     case AUDIO = "audio"
     case MIC = "mic"
     case VIDEO = "video"
@@ -117,7 +117,12 @@ enum CueType: String {
     case CART = "cart"
     case CUECART = "cuecart"
     case CUE_CART = "cue cart"
+    
+    var id: Self { self }
 }
+
+let WINDOW_WIDTH: CGFloat = 700
+let WINDOW_HEIGHT: CGFloat = 500
 
 let CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time", "Time Stamp", "Time *Example MM:SS:MS*"]
 let EXAMPLE_LABELS = ["EXAMPLE FORM"]
@@ -139,19 +144,25 @@ let INVALID_WORKSPACE_NAME_PROMPT = "The workspace name must not be empty. Try a
 let WORKSPACE_PASSCODE_PROMPT = "Please enter the passcode to your workspace. Press ENTER if no passcode is set: "
 
 // Default host used to connect to QLab workspaces
-let DEFAULT_HOST = "192.168.1.152"
+let DEFAULT_HOST = "localhost"
 
 // The default port QLab listens for incoming OSC on.
 // Should be used for all commands sent through TCP and UDP by default.
-let DEFAULT_LISTENING_PORT: UInt16 = 53000
+let DEFAULT_LISTENING_PORT: String = "53000"
 
 // The default port QLab sends UDP responses to.
 // Should be used to receive responses to requests sent to DEFAULT_LISTENING_PORT
-let DEFAULT_RESPONSE_PORT: UInt16 = 53001
+let DEFAULT_RESPONSE_PORT: String = "53001"
 
 // The UDP port on which QLab listens to plain text and attempts to interpret it as OSC.
 // Should be used as a back-up, when the default port connection fails.
-let PLAIN_TEXT_LISTENING_PORT: UInt16 = 53535
+let PLAIN_TEXT_LISTENING_PORT: String = "53535"
+
+// Default passcode to the QLab workspace
+let DEFAULT_PASSCODE = ""
+
+// Default QLab workspace name
+let DEFAULT_WORKSPACE_NAME = ""
 
 // Maximum number of seconds the client will wait for a response from QLab.
 let MAX_RESPONSE_TIME = 2.0
