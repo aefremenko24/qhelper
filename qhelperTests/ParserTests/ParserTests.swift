@@ -298,6 +298,52 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(cue_tables.count, 9)
     }
     
+    func testBattleOfTheASOSBU() throws {
+        let parser = Parser(file_path: workbook3)
+        try parser.set_shared_strings()
+        let cue_tables = try parser.parse_excel_file()
+        
+        let cue_table = cue_tables[0]
+        XCTAssertEqual(cue_table.name, "Boston University")
+        XCTAssertEqual(cue_table.times.count, 6)
+        XCTAssertEqual(cue_table.times[0].value, 0.0)
+        XCTAssertEqual(cue_table.times[0].asString, "00:00.00")
+        XCTAssertEqual(cue_table.times[1].value, 27.0)
+        XCTAssertEqual(cue_table.times[1].asString, "00:27.00")
+        XCTAssertEqual(cue_table.times[2].value, 89.0)
+        XCTAssertEqual(cue_table.times[2].asString, "01:29.00")
+        XCTAssertEqual(cue_table.times[3].value, 173.0)
+        XCTAssertEqual(cue_table.times[3].asString, "02:53.00")
+        XCTAssertEqual(cue_table.times[4].value, 225.0)
+        XCTAssertEqual(cue_table.times[4].asString, "03:45.00")
+        XCTAssertEqual(cue_table.times[5].value, 230.0)
+        XCTAssertEqual(cue_table.times[5].asString, "03:50.00")
+    }
+    
+    func testBattleOfTheASOSTufts() throws {
+        let parser = Parser(file_path: workbook3)
+        try parser.set_shared_strings()
+        let cue_tables = try parser.parse_excel_file()
+        
+        let cue_table = cue_tables[1]
+        XCTAssertEqual(cue_table.name, "COCOA (Tufts)")
+        XCTAssertEqual(cue_table.times.count, 7)
+        XCTAssertEqual(cue_table.times[0].value, 10.0)
+        XCTAssertEqual(cue_table.times[0].asString, "00:10.00")
+        XCTAssertEqual(cue_table.times[1].value, 30.0)
+        XCTAssertEqual(cue_table.times[1].asString, "00:30.00")
+        XCTAssertEqual(cue_table.times[2].value, 98.0)
+        XCTAssertEqual(cue_table.times[2].asString, "01:38.00")
+        XCTAssertEqual(cue_table.times[3].value, 161.0)
+        XCTAssertEqual(cue_table.times[3].asString, "02:41.00")
+        XCTAssertEqual(cue_table.times[4].value, 230.0)
+        XCTAssertEqual(cue_table.times[4].asString, "03:50.00")
+        XCTAssertEqual(cue_table.times[5].value, 366.0)
+        XCTAssertEqual(cue_table.times[5].asString, "06:06.00")
+        XCTAssertEqual(cue_table.times[6].value, 412.0)
+        XCTAssertEqual(cue_table.times[6].asString, "06:52.00")
+    }
+    
     func testCandiceCuesGeneral() throws {
         let parser = Parser(file_path: workbook4)
         try parser.set_shared_strings()
