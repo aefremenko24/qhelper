@@ -8,6 +8,14 @@
 import Foundation
 import CoreXLSX
 
+enum ViewSelection: String, CaseIterable, Hashable, Codable, Identifiable {
+    case DropView = "Add Files"
+    case FilesView = "Preview Cue Tables"
+    case SettingsView = "Settings"
+    
+    var id: Self { self }
+}
+
 class Files: ObservableObject {
     @Published var files: [File] = []
     

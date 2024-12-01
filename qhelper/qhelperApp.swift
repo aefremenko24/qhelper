@@ -11,21 +11,33 @@ import SwiftUI
 struct qhelperApp: App {
     @State var files: Files = Files()
     @StateObject private var store = QHelperStore()
+    @State var viewSelection: ViewSelection = .DropView
     
     var body: some Scene {
         WindowGroup {
-            TabView {
-                Tab("Add Sheets", systemImage: "plus") {
+            VStack {
+                HStack {
+                    Button("Add Files") {
+                        viewSelection = .DropView
+                    }
+                    .background(viewSelection == .DropView ? Color.red : Color.clear)
+                    
+                    Button("Preview Cues") {
+                        viewSelection = .FilesView
+                    }
+                    .background(viewSelection == .FilesView ? Color.red : Color.clear)
+                    
+                    Button("Settings") {
+                        viewSelection = .SettingsView
+                    }
+                    .background(viewSelection == .SettingsView ? Color.red : Color.clear)
+                }
+                .padding()
+                if viewSelection == ViewSelection.DropView {
                     DropView(files: files)
-                }
-                .badge(1)
-                
-                Tab("Preview", systemImage: "list.bullet.indent") {
+                } else if viewSelection == ViewSelection.FilesView {
                     FilesView(files: files, config: store.config)
-                }
-                .badge(2)
-                
-                Tab("Settings", systemImage: "gearshape") {
+                } else if viewSelection == ViewSelection.SettingsView {
                     SettingsView(config: store.config) {
                         Task {
                             do {
@@ -43,7 +55,6 @@ struct qhelperApp: App {
                         }
                     }
                 }
-                .badge(2)
             }
             .frame(width: WINDOW_WIDTH, height: WINDOW_HEIGHT)
             .preferredColorScheme(.dark)

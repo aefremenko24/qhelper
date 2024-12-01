@@ -13,10 +13,12 @@ import CoreXLSX
  */
 class Parser {
     let file_path: String
+    let file_name: String
     var shared_strings: SharedStrings? = nil
     
-    init(file_path: String) {
+    init(file_path: String, file_name: String) {
         self.file_path = file_path
+        self.file_name = file_name
     }
     
     /**
@@ -299,7 +301,8 @@ class Parser {
             for header_cell in header_cells {
                 let extracted_times = exctact_times(worksheet: worksheet.worksheet, reference: header_cell.reference)
                 if extracted_times.isEmpty { continue }
-                let cueTable = CueTable(name: worksheet.name, header_cell: header_cell.reference, times: extracted_times)
+                let cue_table_name = worksheets.count == 1 ? self.file_name : worksheet.name
+                let cueTable = CueTable(name: cue_table_name, header_cell: header_cell.reference, times: extracted_times)
                 result.append(cueTable)
             }
         }

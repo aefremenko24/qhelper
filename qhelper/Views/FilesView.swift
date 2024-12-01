@@ -41,7 +41,6 @@ struct FilesView: View {
             client.parse_cue_dict(cue_tables: files.get_all_cue_tables())
             client.disconnect_from_workspace()
         }
-        .buttonBorderShape(.capsule)
         .buttonStyle(.borderedProminent)
         .padding()
     }

@@ -35,7 +35,7 @@ struct DropView: View {
                             return
                         }
                         do {
-                            var parser = Parser(file_path: newFile.path)
+                            var parser = Parser(file_path: newFile.path, file_name: newFile.name)
                             try parser.set_shared_strings()
                             newFile.cue_tables = try parser.parse_excel_file()
                             files.add(file: newFile)
