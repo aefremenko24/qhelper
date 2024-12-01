@@ -10,6 +10,7 @@ import SwiftUI
 struct FilesView: View {
     
     @ObservedObject var files: Files
+    @ObservedObject var config: UserConfiguration
     
     var body: some View {
         ScrollView {
@@ -25,15 +26,29 @@ struct FilesView: View {
                     Text("Your Excel Files")
                 }
             )
+            .contextMenu(forSelectionType: String.self) { items in
+                Button("Test") {}
+            } primaryAction: { items in
+                print(items)
+            }
         }
         .padding()
         
         Button("Add all to QLab") {
-            let client = Client(port: DEFAULT_LISTENING_PORT, host: DEFAULT_HOST)
-            client.connect_to_workspace(workspace: "3F05D2F2-7182-4A4F-8EA7-8754F46CB1AF")
-            client.parse_cue_dict(cue_tables: files.get_all_cue_tables(), workspace: "3F05D2F2-7182-4A4F-8EA7-8754F46CB1AF")
+            let client = Client()
+            client.update_configuration(config: config)
+            client.connect_to_workspace()
+            client.parse_cue_dict(cue_tables: files.get_all_cue_tables())
             client.disconnect_from_workspace()
         }
+        .buttonBorderShape(.capsule)
+        .buttonStyle(.borderedProminent)
         .padding()
     }
+}
+
+#Preview {
+    var files: Files = Files()
+    var config: UserConfiguration = UserConfiguration()
+    FilesView(files: files, config: config)
 }
