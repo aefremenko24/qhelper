@@ -13,12 +13,17 @@ import OSCKit
  */
 class Client {
     let oscClient: OSCClient = OSCClient()
-    var port: UInt16
-    var host: String
+    var config: UserConfiguration
     
-    init(port: UInt16, host: String) {
-        self.port = port
-        self.host = host
+    init() {
+        self.config = UserConfiguration()
+    }
+    
+    /**
+     Updates the user configuration saved in this Client object to the one provided.
+     */
+    func update_configuration(config: UserConfiguration) {
+        self.config = config
     }
 
     /**
@@ -31,7 +36,7 @@ class Client {
     func send_command(command: String, args: OSCValues = []) {
         let msg = OSCMessage(command, values: args)
         do {
-            try self.oscClient.send(msg, to: self.host, port: self.port)
+            try self.oscClient.send(msg, to: self.config.host, port: UInt16(self.config.port)!)
         } catch let err {
             print("error: \(err)")
         }
@@ -43,12 +48,11 @@ class Client {
      If the workspace does not have a passcode set, establish_connection() call is optional.
 
      - Parameters:
-        - workspace: The name of the QLab workspace.
         - passcode_string: Optional passcode string for the workspace.
      */
-    func connect_to_workspace(workspace: String, passcode_string: String = "") {
+    func connect_to_workspace(passcode_string: String = "") {
         
-        let method_call = String(format: CONNECT_TO_WORKSPACE, workspace)
+        let method_call = String(format: CONNECT_TO_WORKSPACE, config.workspace)
         let args = [passcode_string]
         self.send_command(command: method_call, args: args)
     }
@@ -63,13 +67,10 @@ class Client {
     }
 
     /**
-     Tells the given workspace to save itself to disk.
-
-     - Parameters:
-        - workspace: Name of the QLab workspace.
+     Tells this workspace to save itself to disk.
      */
-    func save_to_disk(workspace: String) {
-        let method_call = String(format: SAVE_TO_DISK, workspace)
+    func save_to_disk() {
+        let method_call = String(format: SAVE_TO_DISK, config.workspace)
         self.send_command(command: method_call)
     }
     
@@ -77,11 +78,10 @@ class Client {
      Creates a cue of a given type.
 
      - Parameters:
-        - workspace: Name of the QLab workspace.
         - cue_type: Cue type (see CueType enum in utils.py).
      */
-    func create_cue(workspace: String, cue_type: CueType) {
-        let method_call = String(format: CREATE_CUE, workspace)
+    func create_cue(cue_type: CueType) {
+        let method_call = String(format: CREATE_CUE, config.workspace)
         let args = [cue_type.rawValue]
         self.send_command(command: method_call, args: args)
     }
@@ -114,11 +114,10 @@ class Client {
      Creates a cue group in the given workspace.
 
      - Parameters:
-        - workspace: Name of the QLab workspace.
         - group_name: Name of the cue group.
      */
-    func create_group(workspace: String, group_name: String) {
-        self.create_cue(workspace: workspace, cue_type: CueType.GROUP)
+    func create_group(group_name: String) {
+        self.create_cue(cue_type: CueType.GROUP)
         self.set_cue_name(name: group_name)
     }
     
@@ -126,11 +125,10 @@ class Client {
      Creates a midi cue with the given pre-wait time in the given workspace.
 
      - Parameters:
-        - workspace: Name of the QLab workspace.
         - pre_wait: Pre-wait time for the cue in seconds.
      */
-    func create_midi_cue(workspace: String, pre_wait: Float) {
-        self.create_cue(workspace: workspace, cue_type: CueType.MIDI)
+    func create_timed_cue(pre_wait: Float) {
+        self.create_cue(cue_type: config.cue_type)
         self.set_cue_prewait(time_stamp: pre_wait)
     }
     
@@ -141,13 +139,12 @@ class Client {
 
      - Parameters:
         - cue_tables: List containing QLab cue information.
-        - workspace: Name of the QLab workspace.
      */
-    func parse_cue_dict(cue_tables: [CueTable], workspace: String) {
+    func parse_cue_dict(cue_tables: [CueTable]) {
         for cue_table in cue_tables {
-            self.create_group(workspace: workspace, group_name: cue_table.name)
+            self.create_group(group_name: cue_table.name)
             for cue in cue_table.times {
-                self.create_midi_cue(workspace: workspace, pre_wait: cue.value)
+                self.create_timed_cue(pre_wait: cue.value)
             }
         }
     }
