@@ -8,11 +8,15 @@
 import SwiftUI
 
 struct MainView: View {
+    @ObservedObject var files: Files
+    @ObservedObject var config: UserConfiguration
+    @State var isDisplayingAlert: Bool = false
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        if files.files.isEmpty {
+            DropView()
+        } else {
+            FilesView(files: files, config: config)
+        }
     }
-}
-
-#Preview {
-    MainView()
 }

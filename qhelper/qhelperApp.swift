@@ -10,49 +10,67 @@ import SwiftUI
 @main
 struct qhelperApp: App {
     @State var files: Files = Files()
-    @StateObject private var store = QHelperStore()
-    @State var viewSelection: ViewSelection = .DropView
+    @State var isDisplayingAlert: Bool = false
+    @StateObject private var store: QHelperStore = QHelperStore()
     
     var body: some Scene {
         WindowGroup {
-            VStack {
-                HStack {
-                    Button("Add Files") {
-                        viewSelection = .DropView
-                    }
-                    .background(viewSelection == .DropView ? Color.red : Color.clear)
-                    
-                    Button("Preview Cues") {
-                        viewSelection = .FilesView
-                    }
-                    .background(viewSelection == .FilesView ? Color.red : Color.clear)
-                    
-                    Button("Settings") {
-                        viewSelection = .SettingsView
-                    }
-                    .background(viewSelection == .SettingsView ? Color.red : Color.clear)
-                }
-                .padding()
-                if viewSelection == ViewSelection.DropView {
-                    DropView(files: files)
-                } else if viewSelection == ViewSelection.FilesView {
-                    FilesView(files: files, config: store.config)
-                } else if viewSelection == ViewSelection.SettingsView {
-                    SettingsView(config: store.config) {
-                        Task {
-                            do {
-                                try await store.save(config: store.config)
-                            } catch {
-                                fatalError(error.localizedDescription)
-                            }
+            TabView {
+                MainView(files: files, config: store.config)
+                    .tabItem {
+                        HStack {
+                            Image(systemName: "folder")
+                            Text("Add Files")
                         }
                     }
-                    .task {
+                    .frame(width: WINDOW_WIDTH, height: WINDOW_HEIGHT)
+                    .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                        if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) } ) {
+                            let _ = provider.loadObject(ofClass: URL.self) { object, error in
+                                if let url = object {
+                                    let newFile = File(path: url.path(percentEncoded: false), name: url.lastPathComponent)
+                                    if url.pathExtension != "xlsx" {
+                                        isDisplayingAlert = true
+                                        return
+                                    }
+                                    do {
+                                        let parser = Parser(file_path: newFile.path, file_name: newFile.name)
+                                        try parser.set_shared_strings()
+                                        newFile.cue_tables = try parser.parse_excel_file()
+                                        files.add(file: newFile)
+                                    } catch {
+                                        isDisplayingAlert = true
+                                    }
+                                    
+                                }
+                            }
+                            return true
+                        }
+                        return false
+                    }
+                    .alert(isPresented: $isDisplayingAlert) { () -> Alert in
+                        Alert(title: Text("Error Processing File"), message: Text("An error occurred while processing the file, make sure it is a valid and not corrupted cue sheet."), dismissButton: .cancel())
+                    }
+                SettingsView(config: store.config) {
+                    Task {
                         do {
-                            try await store.load()
+                            try await store.save(config: store.config)
                         } catch {
                             fatalError(error.localizedDescription)
                         }
+                    }
+                }
+                .tabItem {
+                    HStack {
+                        Image(systemName: "gearshape")
+                        Text("Settings")
+                    }
+                }
+                .task {
+                    do {
+                        try await store.load()
+                    } catch {
+                        fatalError(error.localizedDescription)
                     }
                 }
             }
