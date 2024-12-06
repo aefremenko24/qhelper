@@ -131,6 +131,7 @@ enum CueType: String, CaseIterable, Hashable, Codable, Identifiable {
 
 let WINDOW_WIDTH: CGFloat = 700
 let WINDOW_HEIGHT: CGFloat = 500
+let PADDING: CGFloat = 40
 
 let CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time", "Time Stamp", "Time *Example MM:SS:MS*"]
 let EXAMPLE_LABELS = ["EXAMPLE FORM"]
@@ -198,7 +199,7 @@ extension String {
         var interval: Float = 0
 
         var parts = self.components(separatedBy: ":")
-        var smallest_divison: Float = try Float(parts.last!) ?? 0
+        let smallest_divison: Float = Float(parts.last!) ?? 0
         if parts.count > 2 && smallest_divison == floor(smallest_divison) {
             parts.removeLast()
             parts[parts.count - 1] = String(Float(parts[parts.count - 1])! + smallest_divison / 100)

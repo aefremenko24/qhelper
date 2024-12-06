@@ -23,7 +23,7 @@ struct qhelperApp: App {
                             Text("Add Files")
                         }
                     }
-                    .frame(width: WINDOW_WIDTH, height: WINDOW_HEIGHT)
+                    .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
                     .onDrop(of: [.fileURL], isTargeted: nil) { providers in
                         if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) } ) {
                             let _ = provider.loadObject(ofClass: URL.self) { object, error in
@@ -60,6 +60,7 @@ struct qhelperApp: App {
                         }
                     }
                 }
+                .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
                 .tabItem {
                     HStack {
                         Image(systemName: "gearshape")

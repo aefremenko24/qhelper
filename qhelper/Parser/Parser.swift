@@ -15,6 +15,8 @@ class Parser {
     let file_path: String
     let file_name: String
     var shared_strings: SharedStrings? = nil
+    var current_cue_times_label: String? = nil
+    var current_table_name_label: String? = nil
     
     init(file_path: String, file_name: String) {
         self.file_path = file_path
@@ -31,14 +33,58 @@ class Parser {
     }
     
     /**
+     Finds the rows and columns of all cells with the value equal to the specified value.
+
+     - Parameters:
+        - find_cell: Excel worksheet file to search in.
+        - value: Value to search for.
+     - Returns: Cells with the value equal to the given value.
+     */
+    func find_cell(worksheet: Worksheet, value: String) -> [Cell] {
+        var found: [Cell] = []
+        
+        for row in worksheet.data?.rows ?? [] {
+            for c in row.cells {
+                if c.stringValue(shared_strings!) == value {
+                    found.append(c)
+                }
+            }
+        }
+        return found
+    }
+    
+    /**
+     Finds the rows and columns of all cells with the value containing the specified value.
+
+     - Parameters:
+        - find_cell: Excel worksheet file to search in.
+        - value: Value to search for.
+     - Returns: Cells with the value containing the given value.
+     */
+    func find_cell_regex(worksheet: Worksheet, regex: String) -> [Cell] {
+        var found: [Cell] = []
+        
+        for row in worksheet.data?.rows ?? [] {
+            for c in row.cells {
+                if c.stringValue(shared_strings!) ~= regex {
+                    found.append(c)
+                }
+            }
+        }
+        return found
+    }
+    
+    /**
      Finds the first occurrences of one of the given labels in the given worksheet and returns their Cell objects.
      
      - Parameters:
          - worksheet: Worksheet to use for searching.
          - labels: Labels to look for.
-     - Returns: Cell objects representing the first occurrences of one of the given labels.
+     - Returns:
+        - The label first found in the sheet and Cell objects representing the first occurrences of that label; nil and empty list if none were found.
      */
-    func find_first_cell_occurrences(worksheet: Worksheet, labels: [String]) -> [Cell] {
+    func find_first_cell_occurrences(worksheet: Worksheet, labels: [String]) -> (label: String?, cells: [Cell]) {
+        let found_label: String? = nil
         var found_time_cells: [Cell] = []
         for label in labels {
             found_time_cells = find_cell(worksheet: worksheet, value: label)
@@ -46,7 +92,7 @@ class Parser {
                 break
             }
         }
-        return found_time_cells
+        return (found_label, found_time_cells)
     }
     
     /**
@@ -140,7 +186,7 @@ class Parser {
      - Returns: Number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
      */
     func verify_time_string(time_string: String) -> Optional<CueTime> {
-        var string_representation: String = self.pre_sanitize_cell(cell: time_string)
+        let string_representation: String = self.pre_sanitize_cell(cell: time_string)
         let time_cell_format = Regex(time_stamp_regex)
         if let match = string_representation.firstMatch(of: time_cell_format) {
             var matched_string_representation = String(string_representation[match.range])
@@ -153,28 +199,6 @@ class Parser {
             return CueTime(asString: time_interval.toTimeElapsed(), value: time_interval)
         }
         return nil
-    }
-
-
-    /**
-     Finds the rows and columns of all cells with the specified value.
-
-     - Parameters:
-        - find_cell: Excel worksheet file to search in.
-        - value: Value to search for (will be cast to string for comparison).
-     - Returns: Cells matching the given value.
-     */
-    func find_cell(worksheet: Worksheet, value: String) -> [Cell] {
-        var coordinates: [Cell] = []
-        
-        for row in worksheet.data?.rows ?? [] {
-            for c in row.cells {
-                if c.stringValue(shared_strings!) == value {
-                    coordinates.append(c)
-                }
-            }
-        }
-        return coordinates
     }
 
     /**
@@ -220,8 +244,6 @@ class Parser {
         guard let file = XLSXFile(filepath: excel_file) else {
             throw Errors.runtimeError("XLSX file at \(excel_file) is corrupted or does not exist")
         }
-        
-        let sharedStrings = try file.parseSharedStrings()
         
         var worksheets: [(String, Worksheet)] = []
         
@@ -295,13 +317,16 @@ class Parser {
         
         let worksheets: [(name: String, worksheet: Worksheet)] = try extract_worksheets(excel_file: self.file_path)
         for worksheet in worksheets {
-            var initial_header_cells = find_first_cell_occurrences(worksheet: worksheet.worksheet, labels: CUE_TIME_LABELS)
+            let initial_header_cells = find_first_cell_occurrences(worksheet: worksheet.worksheet, labels: CUE_TIME_LABELS)
             let example_headers = find_first_cell_occurrences(worksheet: worksheet.worksheet, labels: EXAMPLE_LABELS)
-            let header_cells = remove_example_headers(header_cells: initial_header_cells, example_headers: example_headers)
+            
+            self.current_cue_times_label = initial_header_cells.label
+            
+            let header_cells = remove_example_headers(header_cells: initial_header_cells.cells, example_headers: example_headers.cells)
             for header_cell in header_cells {
                 let extracted_times = exctact_times(worksheet: worksheet.worksheet, reference: header_cell.reference)
                 if extracted_times.isEmpty { continue }
-                let cue_table_name = worksheets.count == 1 ? self.file_name : worksheet.name
+                let cue_table_name = worksheets.count == 1 ? self.file_name.replacingOccurrences(of: ".xlsx", with: "") : worksheet.name
                 let cueTable = CueTable(name: cue_table_name, header_cell: header_cell.reference, times: extracted_times)
                 result.append(cueTable)
             }
