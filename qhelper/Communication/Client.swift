@@ -93,6 +93,7 @@ class Client {
         - time_stamp: Time stamp of the cue pre-wait time in the format MM:SS.ms
      */
     func set_cue_prewait(time_stamp: Float) {
+        let time_stamp = time_stamp == 0 ? 0.01 : time_stamp
         let method_call = SET_CUE_PREWAIT
         let args = [time_stamp]
         self.send_command(command: method_call, args: args)
@@ -146,6 +147,7 @@ class Client {
             for cue in cue_table.times {
                 self.create_timed_cue(pre_wait: cue.value)
             }
+            self.save_to_disk()
         }
     }
 
