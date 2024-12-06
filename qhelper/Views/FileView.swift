@@ -17,6 +17,7 @@ struct FileView: View {
                 if !file.cue_tables.isEmpty {
                     ForEach(file.cue_tables) { table in
                         CueTableView(table: table)
+                            .padding(.leading, 20)
                     }
                 }
             },

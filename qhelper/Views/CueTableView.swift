@@ -19,6 +19,7 @@ struct CueTableView: View {
                         Text(time.asString)
                             .foregroundColor(.primary)
                             .font(.headline)
+                            .padding(.leading, 30)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
