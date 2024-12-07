@@ -131,7 +131,7 @@ enum CueType: String, CaseIterable, Hashable, Codable, Identifiable {
 
 let WINDOW_WIDTH: CGFloat = 700
 let WINDOW_HEIGHT: CGFloat = 500
-let PADDING: CGFloat = 40
+let PADDING: CGFloat = 30
 
 let CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time", "Time Stamp", "Time *Example MM:SS:MS*"]
 let EXAMPLE_LABELS = ["EXAMPLE FORM"]

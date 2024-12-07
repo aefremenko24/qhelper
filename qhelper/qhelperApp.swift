@@ -75,8 +75,10 @@ struct qhelperApp: App {
                     }
                 }
             }
-            .frame(width: WINDOW_WIDTH, height: WINDOW_HEIGHT)
+            .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
             .preferredColorScheme(.dark)
+            .padding(.vertical, PADDING)
+            .padding(.horizontal, PADDING/2)
         }
         .windowResizability(.contentSize)
     }
