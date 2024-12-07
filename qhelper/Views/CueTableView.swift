@@ -14,6 +14,22 @@ struct CueTableView: View {
     var body: some View {
         DisclosureGroup(
             content: {
+                AudioFileView(cue_table: table)
+                    .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                        if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) } ) {
+                            let _ = provider.loadObject(ofClass: URL.self) { object, error in
+                                if let url = object {
+                                    do {
+                                        table.audio_file = url.path(percentEncoded: false)
+                                    }
+                                    
+                                }
+                            }
+                            return true
+                        }
+                        return false
+                    }
+                    .frame(height: 20, alignment: .leading)
                 if !table.times.isEmpty {
                     ForEach(table.times) { time in
                         Text(time.asString)

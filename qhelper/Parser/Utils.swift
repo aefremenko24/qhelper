@@ -70,11 +70,18 @@ struct CueTime: Hashable, Identifiable {
     let id = UUID()
 }
 
-struct CueTable: Hashable, Identifiable {
+class CueTable: Hashable, Identifiable, ObservableObject {
     var name: String
     var header_cell: CellReference
     var times: [CueTime]
+    @Published var audio_file: String? = nil
     let id = UUID()
+    
+    init(name: String, header_cell: CellReference, times: [CueTime]) {
+        self.name = name
+        self.header_cell = header_cell
+        self.times = times
+    }
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(header_cell.row.hashValue)
@@ -186,6 +193,7 @@ let SAVE_TO_DISK = "/workspace/%@/save"
 let CREATE_CUE = "/workspace/%@/new"
 let SET_CUE_NAME = "/cue/selected/name"
 let SET_CUE_PREWAIT = "/cue/selected/preWait"
+let SPECIFY_FILE_TARGET = "/cue/selected/fileTarget"
 
 extension String {
     /**

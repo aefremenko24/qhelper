@@ -134,6 +134,35 @@ class Client {
     }
     
     /**
+     Attaches an file at a specified path to the currently selected cue.
+     
+     - Parameters:
+        - file_path: File path and name in any of the following three forms:
+            - Full paths, e.g. /Volumes/MyDisk/path/to/some/file.wav
+            - Paths beginning with a tilde, e.g. ~/path/to some/file.mov
+            - Relative paths, e.g. this/is/a/relative/path.mid
+    
+     Paths beginning with a tilde (~) will be expanded; the tilde signifies “relative to the user’s home directory”.
+     Relative paths will be interpreted according to the current working directory. Use the /workingDirectory application message to set or get the current working directory.
+     */
+    func attach_file_target(file_path: String) {
+        let method_call = SPECIFY_FILE_TARGET
+        let args = [file_path]
+        self.send_command(command: method_call, args: args)
+    }
+    
+    /**
+     Creates an audio cue with the specified audio file attached to it.
+     
+     - Parameters:
+        - file_path: File path and name (see attach_file_target for notes on supported inputs.)
+     */
+    func create_audio_cue(file_path: String) {
+        self.create_cue(cue_type: CueType.AUDIO)
+        self.attach_file_target(file_path: file_path)
+    }
+    
+    /**
      Parses the dictionary containing QLab cue information and adds the cues to the given QLab workspace.
      For the dictionary to be parsed properly, the keys must represent group names
      and values must represent subgroups or cue pre-wait times.
@@ -144,12 +173,15 @@ class Client {
     func parse_cue_dict(cue_tables: [CueTable]) {
         for cue_table in cue_tables {
             self.create_group(group_name: cue_table.name)
+            if cue_table.audio_file != nil {
+                let file_path = cue_table.audio_file!
+                self.create_audio_cue(file_path: file_path)
+            }
             for cue in cue_table.times {
                 self.create_timed_cue(pre_wait: cue.value)
             }
             self.save_to_disk()
         }
     }
-
 }
 
