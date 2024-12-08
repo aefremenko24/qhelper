@@ -15,44 +15,49 @@ struct CueTableView: View {
         DisclosureGroup(
             content: {
                 AudioFileView(cue_table: table)
-                    .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                        if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) } ) {
-                            let _ = provider.loadObject(ofClass: URL.self) { object, error in
-                                if let url = object {
-                                    do {
-                                        table.audio_file = url.path(percentEncoded: false)
-                                    }
-                                    
-                                }
-                            }
-                            return true
-                        }
-                        return false
-                    }
-                    .frame(height: 20, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
                 if !table.times.isEmpty {
                     ForEach(table.times) { time in
                         Text(time.asString)
                             .foregroundColor(.primary)
                             .font(.headline)
-                            .padding(.leading, 30)
+                            .padding(.leading, 20)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             },
             label: {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(table.name)
-                        .foregroundColor(.primary)
-                        .font(.headline)
-                    HStack(spacing: 3) {
-                        Label(String(table.times.count) + " cues", systemImage: "list.bullet.indent")
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(table.name)
+                            .foregroundColor(.primary)
+                            .font(.headline)
+                        HStack(spacing: 3) {
+                            Label(String(table.times.count) + " cues", systemImage: "list.bullet.indent")
+                        }
+                        .foregroundColor(.secondary)
+                        .font(.subheadline)
                     }
-                    .foregroundColor(.secondary)
-                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    TextField("Start at #", text: $table.start_at_index)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
         )
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) } ) {
+                let _ = provider.loadObject(ofClass: URL.self) { object, error in
+                    if let url = object {
+                        do {
+                            table.audio_file = url.path(percentEncoded: false)
+                        }
+                        
+                    }
+                }
+                return true
+            }
+            return false
+        }
     }
 }

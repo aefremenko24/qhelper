@@ -74,6 +74,7 @@ class CueTable: Hashable, Identifiable, ObservableObject {
     var name: String
     var header_cell: CellReference
     var times: [CueTime]
+    var start_at_index: String = ""
     @Published var audio_file: String? = nil
     let id = UUID()
     
@@ -193,7 +194,8 @@ let SAVE_TO_DISK = "/workspace/%@/save"
 let CREATE_CUE = "/workspace/%@/new"
 let SET_CUE_NAME = "/cue/selected/name"
 let SET_CUE_PREWAIT = "/cue/selected/preWait"
-let SPECIFY_FILE_TARGET = "/cue/selected/fileTarget"
+let SET_CUE_FILE_TARGET = "/cue/selected/fileTarget"
+let SET_CUE_NUMBER = "/cue/selected/number"
 
 extension String {
     /**
@@ -251,4 +253,15 @@ extension Date {
         
         return "\(difference.hour!):\(difference.minute!):\(difference.second!)"
     }
+}
+
+/**
+ Gets the file name from the file path.
+ 
+ - Parameters:
+    - file_path: Path to the file.
+ */
+func get_file_name(file_path: String) -> String {
+    let file_name = file_path.contains("/") ? String(file_path.split(separator: "/").last!) : file_path
+    return file_name
 }

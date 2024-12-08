@@ -146,7 +146,7 @@ class Client {
      Relative paths will be interpreted according to the current working directory. Use the /workingDirectory application message to set or get the current working directory.
      */
     func attach_file_target(file_path: String) {
-        let method_call = SPECIFY_FILE_TARGET
+        let method_call = SET_CUE_FILE_TARGET
         let args = [file_path]
         self.send_command(command: method_call, args: args)
     }
@@ -163,6 +163,18 @@ class Client {
     }
     
     /**
+     Sets the number of the selected cue to the given number.
+     
+     - Parameters:
+        - cue_number: Desired number of the cue.
+     */
+    func set_cue_number(cue_number: Int) {
+        let method_call = SET_CUE_NUMBER
+        let args = [String(cue_number)]
+        self.send_command(command: method_call, args: args)
+    }
+    
+    /**
      Parses the dictionary containing QLab cue information and adds the cues to the given QLab workspace.
      For the dictionary to be parsed properly, the keys must represent group names
      and values must represent subgroups or cue pre-wait times.
@@ -172,13 +184,24 @@ class Client {
      */
     func parse_cue_dict(cue_tables: [CueTable]) {
         for cue_table in cue_tables {
+            var current_cue_index: Int? = nil
+            if !cue_table.start_at_index.isEmpty {
+                current_cue_index = Int(cue_table.start_at_index)
+            }
+            
             self.create_group(group_name: cue_table.name)
+            
             if cue_table.audio_file != nil {
                 let file_path = cue_table.audio_file!
                 self.create_audio_cue(file_path: file_path)
             }
             for cue in cue_table.times {
                 self.create_timed_cue(pre_wait: cue.value)
+                
+                if current_cue_index != nil {
+                    self.set_cue_number(cue_number: current_cue_index!)
+                    current_cue_index! += 1
+                }
             }
             self.save_to_disk()
         }
