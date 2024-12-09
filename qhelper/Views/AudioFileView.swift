@@ -13,20 +13,21 @@ struct AudioFileView: View {
     
     var body: some View {
         ZStack {
-            Rectangle()
-                .fill(Color(red: 0.3245, green: 0.3245, blue: 0.3245))
-                .border(Color(red: 0.45, green: 0.45, blue: 0.45), width: self.highlighted ? 4 : 2)
+            RoundedRectangle(cornerSize: CGSize(width: 3, height: 3))
+                .fill(Color.white.opacity(highlighted ? 0.15 : 0.1))
                 .frame(height: 40)
             HStack {
                 if (cue_table.audio_file == nil) {
                     Image(systemName: "plus")
+                        .font(.system(size: 12))
                     Text("add or drop an audio file")
-                        .font(.system(size: 15))
+                        .font(Font.custom("HelveticaNeue", size: 14))
                 }
                 else {
-                    Image(systemName: "music.note")
+                    Image(systemName: "waveform")
+                        .font(.system(size: 12))
                     Text("\(get_file_name(file_path: cue_table.audio_file!))")
-                        .font(.system(size: 15))
+                        .font(Font.custom("HelveticaNeue", size: 14))
                 }
             }
             .padding()
