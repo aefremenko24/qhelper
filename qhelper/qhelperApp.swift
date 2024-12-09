@@ -11,6 +11,7 @@ import SwiftUI
 struct qhelperApp: App {
     @State var files: Files = Files()
     @State var isDisplayingAlert: Bool = false
+    @State var isDroppingFile: Bool = false
     @StateObject private var store: QHelperStore = QHelperStore()
     
     var body: some Scene {
@@ -24,7 +25,9 @@ struct qhelperApp: App {
                         }
                     }
                     .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
-                    .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                    .border(Color.accentColor, width: isDroppingFile ? 1 : 0)
+                    .background(Color.white.opacity(isDroppingFile ? 0.1 : 0))
+                    .onDrop(of: [.fileURL], isTargeted: $isDroppingFile) { providers in
                         if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) } ) {
                             let _ = provider.loadObject(ofClass: URL.self) { object, error in
                                 if let url = object {

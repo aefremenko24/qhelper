@@ -13,14 +13,14 @@ struct AudioFileView: View {
     
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerSize: CGSize(width: 3, height: 3))
+            RoundedRectangle(cornerRadius: 3)
                 .fill(Color.white.opacity(highlighted ? 0.15 : 0.1))
                 .frame(height: 40)
             HStack {
                 if (cue_table.audio_file == nil) {
                     Image(systemName: "plus")
                         .font(.system(size: 12))
-                    Text("add or drop an audio file")
+                    Text("Add or drop an audio file")
                         .font(Font.custom("HelveticaNeue", size: 14))
                 }
                 else {
@@ -38,11 +38,9 @@ struct AudioFileView: View {
             self.highlighted = $0
         }
         .onTapGesture {
-            let panel = NSOpenPanel()
-            panel.allowsMultipleSelection = false
-            panel.canChooseDirectories = false
-            if panel.runModal() == .OK {
-                self.cue_table.audio_file = panel.url?.path(percentEncoded: false)
+            let selected_file = open_file_dialog(allow_multiple_selection: false, can_choose_directories: false)
+            if !selected_file.isEmpty {
+                cue_table.audio_file = selected_file
             }
         }
     }
