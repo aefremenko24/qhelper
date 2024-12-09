@@ -16,7 +16,7 @@ struct CueTableView: View {
             content: {
                 AudioFileView(cue_table: table)
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 7)
                 if !table.times.isEmpty {
                     ForEach(table.times) { time in
                         Text(time.asString)
@@ -42,6 +42,8 @@ struct CueTableView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
                     TextField("Start at #", text: $table.start_at_index)
+                        .frame(width: 70)
+                        .padding(.horizontal, 20)
                 }
             }
         )
