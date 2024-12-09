@@ -7,6 +7,8 @@
 
 import Foundation
 import CoreXLSX
+import AppKit
+import UniformTypeIdentifiers
 
 enum ViewSelection: String, CaseIterable, Hashable, Codable, Identifiable {
     case DropView = "Add Files"
@@ -264,4 +266,29 @@ extension Date {
 func get_file_name(file_path: String) -> String {
     let file_name = file_path.contains("/") ? String(file_path.split(separator: "/").last!) : file_path
     return file_name
+}
+
+/**
+ Opens the file dialog window and lets the user select a file or a directory.
+ 
+ - Parameters:
+    - allow_multiple_selection: True if the user is allowed to select multiple files, False otherwise.
+    - can_choose_directories: True if the user is allowed to choose directories, False otherwise.
+    - allowed_file_types: List of allowed file types. If left empty, any file type is allowed.
+ - Returns: String containing the path of the file selected. If no file is selected, empty string is returned.
+ */
+func open_file_dialog(allow_multiple_selection: Bool = false,
+                      can_choose_directories: Bool = false,
+                      allowed_file_types: [UTType] = []) -> String {
+    let dialog = NSOpenPanel()
+    dialog.allowsMultipleSelection = allow_multiple_selection
+    dialog.canChooseDirectories = can_choose_directories
+    if !allowed_file_types.isEmpty {
+        dialog.allowedContentTypes = allowed_file_types
+    }
+    if dialog.runModal() == .continue {
+        return dialog.url!.path
+    } else {
+        return ""
+    }
 }
