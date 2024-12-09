@@ -166,11 +166,11 @@ class Client {
      Sets the number of the selected cue to the given number.
      
      - Parameters:
-        - cue_number: Desired number of the cue.
+        - cue_number: Desired number of the cue as a string.
      */
-    func set_cue_number(cue_number: Int) {
+    func set_cue_number(cue_number: String) {
         let method_call = SET_CUE_NUMBER
-        let args = [String(cue_number)]
+        let args = [cue_number]
         self.send_command(command: method_call, args: args)
     }
     
@@ -190,16 +190,19 @@ class Client {
             }
             
             self.create_group(group_name: cue_table.name)
+            self.set_cue_number(cue_number: "")
             
             if cue_table.audio_file != nil {
                 let file_path = cue_table.audio_file!
                 self.create_audio_cue(file_path: file_path)
+                self.set_cue_number(cue_number: "")
             }
+            
             for cue in cue_table.times {
                 self.create_timed_cue(pre_wait: cue.value)
                 
                 if current_cue_index != nil {
-                    self.set_cue_number(cue_number: current_cue_index!)
+                    self.set_cue_number(cue_number: String(current_cue_index!))
                     current_cue_index! += 1
                 }
             }
