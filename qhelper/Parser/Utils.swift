@@ -53,7 +53,7 @@ class Files: ObservableObject {
     }
 }
 
-class File: Identifiable, ObservableObject {
+class File: Hashable, Identifiable, ObservableObject {
     init(path: String, name: String) {
         self.path = path
         self.name = name
@@ -63,7 +63,35 @@ class File: Identifiable, ObservableObject {
     let name: String
     let id = UUID()
     var is_expanded: Bool = false
-    var cue_tables: [CueTable] = []
+    @Published var cue_tables: [CueTable] = []
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: File, rhs: File) -> Bool {
+        lhs.path == rhs.path
+    }
+    
+    /**
+     Deletes a cue group from the list of cue groups given its UUID.
+     
+     - Parameter uuid: Unique UUID of the group to be deleted.
+     */
+    func delete(uuid: UUID) {
+        self.cue_tables = self.cue_tables.filter {$0.id != uuid}
+    }
+    
+    /**
+     Moves a cue group from the given index to the destination index.
+     
+     - Parameters:
+        - source: Index where the cue group is located.
+        - destination: Index where the cue group should be placed.
+     */
+    func move(from source: IndexSet, to destination: Int) {
+        self.cue_tables.move(fromOffsets: source, toOffset: destination)
+    }
 }
 
 struct CueTime: Hashable, Identifiable {
@@ -76,7 +104,7 @@ class CueTable: Hashable, Identifiable, ObservableObject {
     var name: String
     var header_cell: CellReference
     var times: [CueTime]
-    var start_at_index: String = ""
+    @Published var start_at_index: String = ""
     @Published var audio_file: String? = nil
     let id = UUID()
     
@@ -94,6 +122,17 @@ class CueTable: Hashable, Identifiable, ObservableObject {
     static func == (lhs: CueTable, rhs: CueTable) -> Bool {
         return lhs.header_cell.row == rhs.header_cell.row
         && lhs.name == rhs.name
+    }
+    
+    static func < (lhs: CueTable, rhs: CueTable) -> Bool {
+        if lhs.start_at_index.isEmpty {
+            return false
+        }
+        if let lhs_as_int = Int(lhs.start_at_index), let rhs_as_int = Int(rhs.start_at_index) {
+            return lhs_as_int < rhs_as_int
+        } else {
+            return lhs.start_at_index < rhs.start_at_index
+        }
     }
 }
 
