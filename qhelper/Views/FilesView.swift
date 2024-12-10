@@ -14,7 +14,7 @@ struct FilesView: View {
     var body: some View {
         VStack {
             ScrollView {
-                ForEach(files.files) { file in
+                ForEach($files.files) { $file in
                     FileView(file: file)
                         .contextMenu {
                             Button(action: {
