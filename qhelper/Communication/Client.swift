@@ -78,7 +78,7 @@ class Client {
      Creates a cue of a given type.
 
      - Parameters:
-        - cue_type: Cue type (see CueType enum in utils.py).
+        - cue_type: Cue type (see CueType enum in Utils.swift).
      */
     func create_cue(cue_type: CueType) {
         let method_call = String(format: CREATE_CUE, config.workspace)
@@ -175,6 +175,20 @@ class Client {
     }
     
     /**
+     Creates a cue of a given type with a given number (meant to be used as a blackout, non-timed cue.
+     
+     - Parameters:
+        - cue_type: Cue type (see CueType enum in Utils.swift).
+        - cue_number: Optional, desired number of the cue as a string.
+     */
+    func create_blackout_cue(cue_type: CueType, cue_number: String? = nil) {
+        self.create_cue(cue_type: cue_type)
+        if cue_number != nil {
+            self.set_cue_number(cue_number: cue_number!)
+        }
+    }
+    
+    /**
      Parses the dictionary containing QLab cue information and adds the cues to the given QLab workspace.
      For the dictionary to be parsed properly, the keys must represent group names
      and values must represent subgroups or cue pre-wait times.
@@ -183,14 +197,29 @@ class Client {
         - cue_tables: List containing QLab cue information.
      */
     func parse_cue_dict(cue_tables: [CueTable]) {
+        let cue_tables = cue_tables.sorted(by: { $0 < $1})
         for cue_table in cue_tables {
             var current_cue_index: Int? = nil
             if !cue_table.start_at_index.isEmpty {
                 current_cue_index = Int(cue_table.start_at_index)
             }
             
+            if config.include_blackout_cue {
+                self.create_blackout_cue(cue_type: config.cue_type, cue_number: current_cue_index == nil ? nil : String(current_cue_index!))
+                if current_cue_index != nil {
+                    current_cue_index! += 1
+                }
+            }
+            
             self.create_group(group_name: cue_table.name)
             self.set_cue_number(cue_number: "")
+            
+            if !config.include_blackout_cue {
+                self.create_blackout_cue(cue_type: config.cue_type, cue_number: current_cue_index == nil ? nil : String(current_cue_index!))
+                if current_cue_index != nil {
+                    current_cue_index! += 1
+                }
+            }
             
             if cue_table.audio_file != nil {
                 let file_path = cue_table.audio_file!
