@@ -10,7 +10,7 @@ import CoreXLSX
 
 struct CueTableView: View {
     
-    @State var table: CueTable
+    @ObservedObject var table: CueTable
     @State var isDroppingFile: Bool = false
     @State var isExpanded: Bool = false
     
@@ -58,10 +58,10 @@ struct CueTableView: View {
             )
             
             if isDroppingFile {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 5)
                     .fill(Color.white.opacity(0.20))
                     .background(.ultraThinMaterial.opacity(0.80))
-                    .border(Color.primary, width: 1)
+                    .blur(radius: 1)
                 Text("Add audio file")
                     .bold()
             }
