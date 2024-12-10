@@ -9,15 +9,24 @@ import SwiftUI
 
 struct FileView: View {
     
-    @State var file: File
+    @ObservedObject var file: File
+    @State var isExpanded: Bool = false
     
     var body: some View {
         DisclosureGroup(
+            isExpanded: $isExpanded,
             content: {
-                if !file.cue_tables.isEmpty {
-                    ForEach(file.cue_tables) { table in
+                ForEach($file.cue_tables, id: \.self) { $table in
+                    HStack {
                         CueTableView(table: table)
                             .padding(.leading, 20)
+                            .contextMenu {
+                                Button(action: {
+                                    file.delete(uuid: table.id)
+                                }){
+                                    Text("Delete Cue Group")
+                                }
+                            }
                     }
                 }
             },
