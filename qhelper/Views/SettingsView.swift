@@ -10,6 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var config: UserConfiguration
     @State private var selectedCueType: CueType = .MIDI
+    @State private var showAdvancedSettings: Bool = false
     @Environment(\.scenePhase) private var scenePhase
     let saveAction: ()->Void
     
@@ -36,54 +37,6 @@ struct SettingsView: View {
                 .disableAutocorrection(true)
                 .padding()
                 
-                TextField(
-                    text: $config.host,
-                    prompt: Text("Required")
-                ) {
-                    Text("Host")
-                }
-                .onSubmit {
-                    if validateHost(host: config.host) {
-                        saveAction()
-                    } else {
-                        self.config.host = DEFAULT_HOST
-                    }
-                }
-                .disableAutocorrection(true)
-                .padding()
-                
-                TextField(
-                    text: $config.port,
-                    prompt: Text("Required")
-                ) {
-                    Text("Port")
-                }
-                .onSubmit {
-                    if validatePort(port: config.port) {
-                        saveAction()
-                    } else {
-                        self.config.port = DEFAULT_LISTENING_PORT
-                    }
-                }
-                .disableAutocorrection(true)
-                .padding()
-                
-                SecureField(
-                    text: $config.passcode,
-                    prompt: Text("Optional")
-                ) {
-                    Text("Passcode")
-                }
-                .onSubmit {
-                    if validatePassCode(passcode: config.passcode) {
-                        saveAction()
-                    } else {
-                        self.config.passcode = ""
-                    }
-                }
-                .disableAutocorrection(true)
-                .padding()
-                
                 Picker("Timed Cue Type", selection: $config.cue_type) {
                     ForEach(CueType.allCases, id: \.self) {
                         Text($0.rawValue)
@@ -93,6 +46,75 @@ struct SettingsView: View {
                     saveAction()
                 }
                 .padding()
+                
+                Toggle(isOn: $config.include_blackout_cue) {
+                    Text("Blackout cues before cue groups")
+                    if config.include_blackout_cue {
+                        Text("Will include a blackout cue before each cue group")
+                    } else {
+                        Text("Will include a blackout cue inside each cue group")
+                    }
+                    
+                }
+                .onChange(of: config.include_blackout_cue) { _ in
+                    saveAction()
+                }
+                
+                DisclosureGroup(
+                    isExpanded: $showAdvancedSettings,
+                    content: {
+                        TextField(
+                            text: $config.host,
+                            prompt: Text("Required")
+                        ) {
+                            Text("Host")
+                        }
+                        .onSubmit {
+                            if validateHost(host: config.host) {
+                                saveAction()
+                            } else {
+                                self.config.host = DEFAULT_HOST
+                            }
+                        }
+                        .disableAutocorrection(true)
+                        .padding()
+                        
+                        TextField(
+                            text: $config.port,
+                            prompt: Text("Required")
+                        ) {
+                            Text("Port")
+                        }
+                        .onSubmit {
+                            if validatePort(port: config.port) {
+                                saveAction()
+                            } else {
+                                self.config.port = DEFAULT_LISTENING_PORT
+                            }
+                        }
+                        .disableAutocorrection(true)
+                        .padding()
+                        
+                        SecureField(
+                            text: $config.passcode,
+                            prompt: Text("Optional")
+                        ) {
+                            Text("Passcode")
+                        }
+                        .onSubmit {
+                            if validatePassCode(passcode: config.passcode) {
+                                saveAction()
+                            } else {
+                                self.config.passcode = ""
+                            }
+                        }
+                        .disableAutocorrection(true)
+                        .padding()
+                    },
+                    label: {
+                        Text("Advanced Settings")
+                    }
+                )
             }
             .onChange(of: scenePhase) { phase in
                 if phase == .inactive { saveAction() }
