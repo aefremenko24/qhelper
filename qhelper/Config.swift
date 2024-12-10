@@ -13,6 +13,7 @@ class UserConfiguration: ObservableObject, Codable {
     @Published var port: String
     @Published var passcode: String
     @Published var cue_type: CueType
+    @Published var include_blackout_cue: Bool
     
     init() {
         self.workspace = DEFAULT_WORKSPACE_NAME
@@ -20,6 +21,7 @@ class UserConfiguration: ObservableObject, Codable {
         self.port = DEFAULT_LISTENING_PORT
         self.passcode = DEFAULT_PASSCODE
         self.cue_type = CueType.MIDI
+        self.include_blackout_cue = false
     }
     
     func set_workspace(_ workspace: String) {
@@ -42,12 +44,17 @@ class UserConfiguration: ObservableObject, Codable {
         self.cue_type = cue_type
     }
     
+    func set_include_blackout_cue(_ include_blackout_cue: Bool) {
+        self.include_blackout_cue = include_blackout_cue
+    }
+    
     enum ConfigKeys: CodingKey {
         case workspace
         case host
         case port
         case passcode
         case cue_type
+        case include_blackout_cue
     }
     
     required init(from decoder: Decoder) throws {
@@ -57,6 +64,7 @@ class UserConfiguration: ObservableObject, Codable {
         port = try values.decode(String.self, forKey: .port)
         passcode = try values.decode(String.self, forKey: .passcode)
         cue_type = try values.decode(CueType.self, forKey: .cue_type)
+        include_blackout_cue = try values.decode(Bool.self, forKey: .include_blackout_cue)
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -66,6 +74,7 @@ class UserConfiguration: ObservableObject, Codable {
         try values.encode(port, forKey: .port)
         try values.encode(passcode, forKey: .passcode)
         try values.encode(cue_type, forKey: .cue_type)
+        try values.encode(include_blackout_cue, forKey: .include_blackout_cue)
     }
 }
 
