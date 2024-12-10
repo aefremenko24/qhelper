@@ -10,7 +10,8 @@ import SwiftUI
 @main
 struct qhelperApp: App {
     @State var files: Files = Files()
-    @State var isDisplayingAlert: Bool = false
+    @State var invalidFileAlert: Bool = false
+    @State var failedConfigLoadAlert: Bool = false
     @State var isDroppingFile: Bool = false
     @StateObject private var store: QHelperStore = QHelperStore()
     
@@ -33,7 +34,7 @@ struct qhelperApp: App {
                                 if let url = object {
                                     let newFile = File(path: url.path(percentEncoded: false), name: url.lastPathComponent)
                                     if url.pathExtension != "xlsx" {
-                                        isDisplayingAlert = true
+                                        invalidFileAlert = true
                                         return
                                     }
                                     do {
@@ -42,7 +43,7 @@ struct qhelperApp: App {
                                         newFile.cue_tables = try parser.parse_excel_file()
                                         files.add(file: newFile)
                                     } catch {
-                                        isDisplayingAlert = true
+                                        invalidFileAlert = true
                                     }
                                     
                                 }
@@ -51,7 +52,7 @@ struct qhelperApp: App {
                         }
                         return false
                     }
-                    .alert(isPresented: $isDisplayingAlert) { () -> Alert in
+                    .alert(isPresented: $invalidFileAlert) { () -> Alert in
                         Alert(title: Text("Error Processing File"), message: Text("An error occurred while processing the file, make sure it is a valid and not corrupted cue sheet."), dismissButton: .cancel())
                     }
                 SettingsView(config: store.config) {
@@ -74,8 +75,12 @@ struct qhelperApp: App {
                     do {
                         try await store.load()
                     } catch {
-                        fatalError(error.localizedDescription)
+                        invalidFileAlert = true
+                        store.config = UserConfiguration()
                     }
+                }
+                .alert(isPresented: $invalidFileAlert) { () -> Alert in
+                    Alert(title: Text("Could not load user configuration"), message: Text("An error occurred while loading your latest settings. The app data might have been corrupted. Default settings were loaded."), dismissButton: .cancel())
                 }
             }
             .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
