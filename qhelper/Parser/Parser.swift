@@ -187,7 +187,7 @@ class Parser {
      */
     func verify_time_string(time_string: String) -> Optional<CueTime> {
         let string_representation: String = self.pre_sanitize_cell(cell: time_string)
-        let time_cell_format = Regex(time_stamp_regex)
+        let time_cell_format = Regex(TIME_STAMP_REGEX)
         if let match = string_representation.firstMatch(of: time_cell_format) {
             var matched_string_representation = String(string_representation[match.range])
             if string_representation != matched_string_representation {
@@ -210,6 +210,7 @@ class Parser {
      */
     func exctact_times(worksheet: Worksheet, reference: CellReference) -> [CueTime] {
         var time_stamps: [CueTime] = []
+        var last_found_row: UInt = reference.row
         var remaining_tolerance = EMPTY_TIME_CELL_TOLERANCE
         
         for row in worksheet.data?.rows ?? [] {
@@ -220,9 +221,11 @@ class Parser {
                     if time_stamp != nil {
                         time_stamps.append(time_stamp!)
                         remaining_tolerance = EMPTY_TIME_CELL_TOLERANCE
+                        last_found_row = c.reference.row
                     } else if remaining_tolerance > 0 {
-                        remaining_tolerance -= 1
-                    } else {
+                        remaining_tolerance -= Int(c.reference.row - last_found_row)
+                    }
+                    if remaining_tolerance <= 0 {
                         return time_stamps
                     }
                 }
