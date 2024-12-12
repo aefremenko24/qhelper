@@ -36,7 +36,7 @@ struct FilesView: View {
             Button("Add all to QLab") {
                 let client = Client()
                 client.update_configuration(config: config)
-                client.connect_to_workspace()
+                client.connect_to_workspace(passcode_string: config.passcode)
                 client.parse_cue_dict(cue_tables: files.get_all_cue_tables())
                 client.disconnect_from_workspace()
             }
@@ -47,7 +47,7 @@ struct FilesView: View {
 }
 
 #Preview {
-    var files: Files = Files()
-    var config: UserConfiguration = UserConfiguration()
+    let files: Files = Files()
+    let config: UserConfiguration = UserConfiguration()
     FilesView(files: files, config: config)
 }

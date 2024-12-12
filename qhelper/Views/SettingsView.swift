@@ -80,16 +80,16 @@ struct SettingsView: View {
                         .padding()
                         
                         TextField(
-                            text: $config.port,
+                            text: $config.send_port,
                             prompt: Text("Required")
                         ) {
                             Text("Port")
                         }
                         .onSubmit {
-                            if validatePort(port: config.port) {
+                            if validatePort(port: config.send_port) {
                                 saveAction()
                             } else {
-                                self.config.port = DEFAULT_LISTENING_PORT
+                                self.config.send_port = DEFAULT_LISTENING_PORT
                             }
                         }
                         .disableAutocorrection(true)

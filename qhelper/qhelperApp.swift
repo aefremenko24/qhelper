@@ -29,28 +29,31 @@ struct qhelperApp: App {
                     .border(Color.accentColor, width: isDroppingFile ? 1 : 0)
                     .background(Color.white.opacity(isDroppingFile ? 0.1 : 0))
                     .onDrop(of: [.fileURL], isTargeted: $isDroppingFile) { providers in
-                        if let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) } ) {
-                            let _ = provider.loadObject(ofClass: URL.self) { object, error in
-                                if let url = object {
-                                    let newFile = File(path: url.path(percentEncoded: false), name: url.lastPathComponent)
-                                    if url.pathExtension != "xlsx" {
-                                        invalidFileAlert = true
-                                        return
+                        for provider in providers {
+                            if provider.canLoadObject(ofClass: URL.self) {
+                                let _ = provider.loadObject(ofClass: URL.self) { object, error in
+                                    if let url = object {
+                                        let newFile = File(path: url.path(percentEncoded: false), name: url.lastPathComponent)
+                                        if url.pathExtension != "xlsx" {
+                                            invalidFileAlert = true
+                                            return
+                                        }
+                                        do {
+                                            let parser = Parser(file_path: newFile.path, file_name: newFile.name)
+                                            try parser.set_shared_strings()
+                                            newFile.cue_tables = try parser.parse_excel_file()
+                                            files.add(file: newFile)
+                                        } catch {
+                                            invalidFileAlert = true
+                                        }
+                                        
                                     }
-                                    do {
-                                        let parser = Parser(file_path: newFile.path, file_name: newFile.name)
-                                        try parser.set_shared_strings()
-                                        newFile.cue_tables = try parser.parse_excel_file()
-                                        files.add(file: newFile)
-                                    } catch {
-                                        invalidFileAlert = true
-                                    }
-                                    
                                 }
+                            } else {
+                                return false
                             }
-                            return true
                         }
-                        return false
+                        return true
                     }
                     .alert(isPresented: $invalidFileAlert) { () -> Alert in
                         Alert(title: Text("Error Processing File"), message: Text("An error occurred while processing the file, make sure it is a valid and not corrupted cue sheet."), dismissButton: .cancel())
@@ -80,7 +83,9 @@ struct qhelperApp: App {
                     }
                 }
                 .alert(isPresented: $invalidFileAlert) { () -> Alert in
-                    Alert(title: Text("Could not load user configuration"), message: Text("An error occurred while loading your latest settings. The app data might have been corrupted. Default settings were loaded."), dismissButton: .cancel())
+                    Alert(title: Text("Welcome to QHelper!"), message: Text("Adjust these settings to match your desired workflow, drop your cue sheets in the 'Add Files' tab, and hit 'Add all to QLab' to begin!"), dismissButton: .cancel(
+                        Text("Got it")
+                    ))
                 }
             }
             .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)

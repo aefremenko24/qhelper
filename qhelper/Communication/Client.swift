@@ -36,7 +36,7 @@ class Client {
     func send_command(command: String, args: OSCValues = []) {
         let msg = OSCMessage(command, values: args)
         do {
-            try self.oscClient.send(msg, to: self.config.host, port: UInt16(self.config.port)!)
+            try self.oscClient.send(msg, to: self.config.host, port: UInt16(self.config.send_port)!)
         } catch let err {
             print("error: \(err)")
         }
@@ -51,7 +51,6 @@ class Client {
         - passcode_string: Optional passcode string for the workspace.
      */
     func connect_to_workspace(passcode_string: String = "") {
-        
         let method_call = String(format: CONNECT_TO_WORKSPACE, config.workspace)
         let args = [passcode_string]
         self.send_command(command: method_call, args: args)
@@ -93,7 +92,7 @@ class Client {
         - time_stamp: Time stamp of the cue pre-wait time in the format MM:SS.ms
      */
     func set_cue_prewait(time_stamp: Float) {
-        let time_stamp = time_stamp == 0 ? 0.01 : time_stamp
+        let time_stamp = time_stamp == 0 ? 0.02 : time_stamp
         let method_call = SET_CUE_PREWAIT
         let args = [time_stamp]
         self.send_command(command: method_call, args: args)
@@ -189,6 +188,19 @@ class Client {
     }
     
     /**
+     Moves the selected cue to the given group.
+     
+     - Parameters:
+        - group_id: ID of the group to move the selected cue to.
+        - new_index: Position within the group to move the cue to.
+     */
+    func move_cue_to_group(group_id: String, new_index: Int) {
+        let method_call = String(format: MOVE_CUE, config.workspace)
+        let args: Array<any OSCValue> = [new_index, group_id]
+        self.send_command(command: method_call, args: args)
+    }
+    
+    /**
      Parses the dictionary containing QLab cue information and adds the cues to the given QLab workspace.
      For the dictionary to be parsed properly, the keys must represent group names
      and values must represent subgroups or cue pre-wait times.
@@ -198,7 +210,7 @@ class Client {
      */
     func parse_cue_dict(cue_tables: [CueTable]) {
         let cue_tables = cue_tables.sorted(by: { $0 < $1})
-        for cue_table in cue_tables {
+        for (cue_table_index, cue_table) in cue_tables.enumerated() {
             var current_cue_index: Int? = nil
             if !cue_table.start_at_index.isEmpty {
                 current_cue_index = Int(cue_table.start_at_index)
@@ -212,19 +224,21 @@ class Client {
             }
             
             self.create_group(group_name: cue_table.name)
-            self.set_cue_number(cue_number: "")
-            
-            if !config.include_blackout_cue {
-                self.create_blackout_cue(cue_type: config.cue_type, cue_number: current_cue_index == nil ? nil : String(current_cue_index!))
-                if current_cue_index != nil {
-                    current_cue_index! += 1
-                }
-            }
+            let group_id = current_cue_index == nil ? "G\(cue_table_index)" : "G\(current_cue_index!)"
+            self.set_cue_number(cue_number: group_id)
             
             if cue_table.audio_file != nil {
                 let file_path = cue_table.audio_file!
                 self.create_audio_cue(file_path: file_path)
                 self.set_cue_number(cue_number: "")
+            }
+            
+            if !config.include_blackout_cue {
+                self.create_timed_cue(pre_wait: 0.01)
+                if current_cue_index != nil {
+                    self.set_cue_number(cue_number: String(current_cue_index!))
+                    current_cue_index! += 1
+                }
             }
             
             for cue in cue_table.times {

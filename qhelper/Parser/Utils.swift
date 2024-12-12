@@ -140,7 +140,7 @@ enum Errors: Error {
     case runtimeError(String)
 }
 
-let time_stamp_regex = /(([0-5]?\d\W){1,3})(\d+(\.\d*)?)/
+let TIME_STAMP_REGEX = /(([0-5]?\d\W){1,3})(\d+(\.\d*)?)/
 
 enum CueType: String, CaseIterable, Hashable, Codable, Identifiable {
     case AUDIO = "audio"
@@ -183,23 +183,9 @@ let WINDOW_HEIGHT: CGFloat = 500
 let PADDING: CGFloat = 30
 
 let CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time", "Time Stamp", "Time *Example MM:SS:MS*"]
-let EXAMPLE_LABELS = ["EXAMPLE FORM"]
+let EXAMPLE_LABELS = ["EXAMPLE FORM", "EXAMPLE", "SEE EXAMPLE BELOW"]
 let EMPTY_TIME_CELL_TOLERANCE: Int = 2
 let TYPICAL_CUE_TABLE_LENGTH: Int = 10
-
-let CONNECTION_SUCCESS_MESSAGE = "You are connected to QLab. Host: {host}, Port: {port}"
-let CONNECTION_FAILURE_MESSAGE = "Failed to connect to the server using port {port}."
-let WRITE_ERROR_MESSAGE = "Failed to communicate with QLab. The command {command} with arguments {args} WAS NOT sent."
-let READ_ERROR_MESSAGE = "Failed to receive the response from QLab. The previous command might not have been recorded."
-let CONNECTION_NOT_ESTABLISHED_WARNING = "This method should not be called before the connection to QLab is established."
-
-let EXIT_SUCCESS_MESSAGE = "Program run finished successfully. Your cues were written to your QLab workspace."
-let EXIT_FAILURE_MESSAGE = ("Something went wrong during the execution of the program. " +
-                        "Your cues might have been written to the QLab workspace partially.")
-
-let WORKSPACE_NAME_PROMPT = "Please enter the name of the QLab workspace you would like to write cues to: "
-let INVALID_WORKSPACE_NAME_PROMPT = "The workspace name must not be empty. Try again: "
-let WORKSPACE_PASSCODE_PROMPT = "Please enter the passcode to your workspace. Press ENTER if no passcode is set: "
 
 // Default host used to connect to QLab workspaces
 let DEFAULT_HOST = "localhost"
@@ -210,7 +196,7 @@ let DEFAULT_LISTENING_PORT: String = "53000"
 
 // The default port QLab sends UDP responses to.
 // Should be used to receive responses to requests sent to DEFAULT_LISTENING_PORT
-let DEFAULT_RESPONSE_PORT: String = "53001"
+let DEFAULT_RESPONSE_PORT: Int = 53001
 
 // The UDP port on which QLab listens to plain text and attempts to interpret it as OSC.
 // Should be used as a back-up, when the default port connection fails.
@@ -225,18 +211,62 @@ let DEFAULT_WORKSPACE_NAME = ""
 // Maximum number of seconds the client will wait for a response from QLab.
 let MAX_RESPONSE_TIME = 2.0
 
-// Maximum number of tries to send/receive a request/response
-let MAX_NUM_TRIES = 3
+/*
+ These are QLab application methods used to communicate with workspaces.
+ */
 
-// These are QLab application methods used to communicate with workspaces.
+// Command to connect to the workspace.
+// The format argument is the workspace ID. No OSC arguments required.
 let CONNECT_TO_WORKSPACE = "/workspace/%@/connect"
+
+// Command to disconnect from QLab. Should be used when no more commands will be sent over.
+// No format or OSC arguments required.
 let DISCONNECT = "/disconnect"
+
+// Command to save the workspace to disk.
+// The format argument is the workspace ID. No OSC arguments required.
 let SAVE_TO_DISK = "/workspace/%@/save"
+
+// Command to create a new cue in the given workspace.
+// The format argument is the workspace ID.
+// One OSC argument required — cue type, which is one of CueType enum strings.
+// Optional OSC argument {cue_ID} may be supplied. This will create a new cue within the group with the {cue_ID}.
 let CREATE_CUE = "/workspace/%@/new"
+
+// Command to set the name of the selected cue to a given string.
+// No format arguments required. One OSC argument requires — desired name of the cue as a string.
 let SET_CUE_NAME = "/cue/selected/name"
+
+// Command to set the pre-wait of the selected cue to the given number of seconds.
+// No format arguments required. One OSC argument required — desired pre-wait time as a Float.
 let SET_CUE_PREWAIT = "/cue/selected/preWait"
+
+// Command to set the file target of the selected cue. Most useful for Audio and Video cues.
+// No format arguments required. One OSC argument required — path to the desired file as a string.
 let SET_CUE_FILE_TARGET = "/cue/selected/fileTarget"
+
+// Command to set the cue number (ID).
+// No format arguments required. One OSC argument required — desired cue number as a string.
 let SET_CUE_NUMBER = "/cue/selected/number"
+
+// Command to move the specified cue from its current position to the given new_index position within the Group,
+// Cart, or List whose unique ID is new_parent_cue_id.
+// The format argument is the workspace ID.
+// Two OSC arguments required — new_index and new_parent_cue_id.
+let MOVE_CUE = "/workspace/%@/move/cue/selected"
+
+/*
+ These are common QLab responses sent over UDP.
+ */
+
+// The supplied passcode matches a passcode entry in the workspace and connection was successful.
+let CONNECTED_SUCCESS = "ok"
+
+// The passcode does not match any passcode entries in the workspace.
+let CONNECTED_BADPASS = "badpass"
+
+// The specified workspace does not exist or is not open.
+let CONNECTED_ERROR = "error"
 
 extension String {
     /**
@@ -308,6 +338,23 @@ func get_file_name(file_path: String) -> String {
 }
 
 /**
+ Decodes JSON data into a QLab reponse struct.
+ 
+ - Parameters:
+    - data: Bytes to be decoded.
+ - Returns: The QLabResponse obkect decoded from the data.
+ */
+func decode_qlab_response(data: Data?) -> QLabResponse? {
+    if data == nil { return nil }
+    do {
+        let decoded = try JSONDecoder().decode(QLabResponse.self, from: data!)
+        return decoded
+    } catch {
+        return nil
+    }
+}
+
+/**
  Opens the file dialog window and lets the user select a file or a directory.
  
  - Parameters:
@@ -325,7 +372,7 @@ func open_file_dialog(allow_multiple_selection: Bool = false,
     if !allowed_file_types.isEmpty {
         dialog.allowedContentTypes = allowed_file_types
     }
-    if dialog.runModal() == .continue {
+    if dialog.runModal() == .OK {
         return dialog.url!.path
     } else {
         return ""
