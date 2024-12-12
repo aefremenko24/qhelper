@@ -6,29 +6,94 @@
 //
 
 import Foundation
-import OSCKit
+import Network
 
-class Server {
-    var oscServer: OSCServer
-    var responses: [OSCMessage] = []
+struct QLabResponse: Decodable {
+    let workspace_id: String
+    let address: String
+    let status: String
+    let data: String
+}
 
-    init(port: UInt16) {
-        self.oscServer = OSCServer(port: port)
+class Server: ObservableObject {
+    var listener: NWListener?
+    var connection: NWConnection?
+    var queue = DispatchQueue.global(qos: .userInitiated)
+    /// New data will be place in this variable to be received by observers
+    @Published private(set) public var messageReceived: Data?
+    /// When there is an active listening NWConnection this will be `true`
+    @Published private(set) public var isReady: Bool = false
+    /// Default value `true`, this will become false if the UDPListener ceases listening for any reason
+    @Published public var listening: Bool = true
+    
+    /// A convenience init using Int instead of NWEndpoint.Port
+    convenience init(port: Int) {
+        self.init(on: NWEndpoint.Port(integerLiteral: NWEndpoint.Port.IntegerLiteralType(port)))
+    }
+    /// Use this init or the one that takes an Int to start the listener
+    init(on port: NWEndpoint.Port) {
+        let params = NWParameters.udp
+        params.allowFastOpen = true
+        self.listener = try? NWListener(using: params, on: port)
+        self.listener?.stateUpdateHandler = { update in
+            switch update {
+            case .ready:
+                self.isReady = true
+                print("Listener connected to port \(port)")
+            case .failed, .cancelled:
+                // Announce we are no longer able to listen
+                self.listening = false
+                self.isReady = false
+                print("Listener disconnected from port \(port)")
+            default:
+                print("Listener connecting to port \(port)...")
+            }
+        }
+        self.listener?.newConnectionHandler = { connection in
+            print("Listener receiving new message")
+            self.createConnection(connection: connection)
+        }
+        self.listener?.start(queue: self.queue)
     }
     
-    func start() async throws {
-        try await oscServer.start()
-        
-        await self.oscServer.setHandler { [weak self] oscMessage, timeTag in
-            do {
-                try self?.handle(received: oscMessage)
-            } catch {
-                print(error)
+    func createConnection(connection: NWConnection) {
+        self.connection = connection
+        self.connection?.stateUpdateHandler = { (newState) in
+            switch (newState) {
+            case .ready:
+                print("Listener ready to receive message - \(connection)")
+                self.receive()
+            case .cancelled, .failed:
+                print("Listener failed to receive message - \(connection)")
+                // Cancel the listener, something went wrong
+                self.listener?.cancel()
+                // Announce we are no longer able to listen
+                self.listening = false
+            default:
+                print("Listener waiting to receive message - \(connection)")
+            }
+        }
+        self.connection?.start(queue: .global())
+    }
+    
+    func receive() {
+        self.connection?.receiveMessage { data, context, isComplete, error in
+            if data != nil {
+                self.messageReceived = data
+            }
+            if self.listening {
+                self.receive()
             }
         }
     }
-
-    private func handle(received oscMessage: OSCMessage) throws {
-        responses.append(oscMessage)
+    
+    func get_message() -> Data? {
+        self.receive()
+        return messageReceived
+    }
+    
+    func cancel() {
+        self.listening = false
+        self.connection?.cancel()
     }
 }
