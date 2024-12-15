@@ -253,7 +253,7 @@ let SET_CUE_NUMBER = "/cue/selected/number"
 // Cart, or List whose unique ID is new_parent_cue_id.
 // The format argument is the workspace ID.
 // Two OSC arguments required — new_index and new_parent_cue_id.
-let MOVE_CUE = "/workspace/%@/move/cue/selected"
+let MOVE_CUE = "/cue/selected/group/%@"
 
 /*
  These are common QLab responses sent over UDP.
@@ -352,6 +352,17 @@ func decode_qlab_response(data: Data?) -> QLabResponse? {
     } catch {
         return nil
     }
+}
+
+/**
+ Executes an Apple String written in a file.
+ 
+ - Parameter script_path: Apple Script file path URL.
+ */
+func execute_apple_script(script_path: URL) {
+    var error: NSDictionary? = nil
+    let script_executer = NSAppleScript(contentsOf: script_path, error: &error)
+    script_executer?.executeAndReturnError(&error)
 }
 
 /**

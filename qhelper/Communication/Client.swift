@@ -14,6 +14,7 @@ import OSCKit
 class Client {
     let oscClient: OSCClient = OSCClient()
     var config: UserConfiguration
+    var lx_script: URL? = Bundle.main.url(forResource: "LX_Cue_Script", withExtension: "scpt")
     
     init() {
         self.config = UserConfiguration()
@@ -133,6 +134,15 @@ class Client {
     }
     
     /**
+     Makes the selected cues in QLab LX cues by running `LX_Cue_Script.scpt`.
+     */
+    func make_lx_cue() {
+        if lx_script != nil && config.cue_type == CueType.MIDI {
+            execute_apple_script(script_path: lx_script!)
+        }
+    }
+    
+    /**
      Attaches an file at a specified path to the currently selected cue.
      
      - Parameters:
@@ -159,6 +169,7 @@ class Client {
     func create_audio_cue(file_path: String) {
         self.create_cue(cue_type: CueType.AUDIO)
         self.attach_file_target(file_path: file_path)
+        self.set_cue_number(cue_number: "")
     }
     
     /**
@@ -192,12 +203,10 @@ class Client {
      
      - Parameters:
         - group_id: ID of the group to move the selected cue to.
-        - new_index: Position within the group to move the cue to.
      */
-    func move_cue_to_group(group_id: String, new_index: Int) {
-        let method_call = String(format: MOVE_CUE, config.workspace)
-        let args: Array<any OSCValue> = [new_index, group_id]
-        self.send_command(command: method_call, args: args)
+    func move_cue_to_group(group_id: String) {
+        let method_call = String(format: MOVE_CUE, group_id)
+        self.send_command(command: method_call)
     }
     
     /**
@@ -218,6 +227,7 @@ class Client {
             
             if config.include_blackout_cue {
                 self.create_blackout_cue(cue_type: config.cue_type, cue_number: current_cue_index == nil ? nil : String(current_cue_index!))
+                self.make_lx_cue()
                 if current_cue_index != nil {
                     current_cue_index! += 1
                 }
@@ -230,7 +240,6 @@ class Client {
             if cue_table.audio_file != nil {
                 let file_path = cue_table.audio_file!
                 self.create_audio_cue(file_path: file_path)
-                self.set_cue_number(cue_number: "")
             }
             
             if !config.include_blackout_cue {
@@ -239,6 +248,7 @@ class Client {
                     self.set_cue_number(cue_number: String(current_cue_index!))
                     current_cue_index! += 1
                 }
+                self.make_lx_cue()
             }
             
             for cue in cue_table.times {
@@ -248,6 +258,10 @@ class Client {
                     self.set_cue_number(cue_number: String(current_cue_index!))
                     current_cue_index! += 1
                 }
+                
+                self.make_lx_cue()
+                
+                self.move_cue_to_group(group_id: group_id)
             }
             self.save_to_disk()
         }
