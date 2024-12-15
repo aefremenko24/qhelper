@@ -255,6 +255,14 @@ let SET_CUE_NUMBER = "/cue/selected/number"
 // Two OSC arguments required — new_index and new_parent_cue_id.
 let MOVE_CUE = "/cue/selected/group/%@"
 
+// Command to set the cue parameter specified as a string key to a given value.
+// The format argument is the key of the parameter to be set.
+// One OSC argument required - value of the key to be set.
+let SET_CUE_PARAMETER = "/cue/selected/parameterValue/%@"
+
+// Key used to specify the cue number for the network cue.
+let CUE_NUMBER_NETWORK_KEY = "cueNumber"
+
 /*
  These are common QLab responses sent over UDP.
  */

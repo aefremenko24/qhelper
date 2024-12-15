@@ -134,11 +134,25 @@ class Client {
     }
     
     /**
+     For the given patch value, set it as the value for the cue number parameter of the selected network cue.
+     
+     - Parameters:
+        - patch_value: Value to be set as a cue number of the network cue.
+     */
+    func set_network_cue_number_patch(patch_value: String) {
+        let method_call = String(format: SET_CUE_PARAMETER, CUE_NUMBER_NETWORK_KEY)
+        let args = [patch_value]
+        self.send_command(command: method_call, args: args)
+    }
+    
+    /**
      Makes the selected cues in QLab LX cues by running `LX_Cue_Script.scpt`.
      */
-    func make_lx_cue() {
+    func make_lx_cue(cue_number: String) {
         if lx_script != nil && config.cue_type == CueType.MIDI {
             execute_apple_script(script_path: lx_script!)
+        } else if config.cue_type == CueType.NETWORK {
+            self.set_network_cue_number_patch(patch_value: cue_number)
         }
     }
     
@@ -227,8 +241,8 @@ class Client {
             
             if config.include_blackout_cue {
                 self.create_blackout_cue(cue_type: config.cue_type, cue_number: current_cue_index == nil ? nil : String(current_cue_index!))
-                self.make_lx_cue()
                 if current_cue_index != nil {
+                    self.make_lx_cue(cue_number: String(current_cue_index!))
                     current_cue_index! += 1
                 }
             }
@@ -246,9 +260,9 @@ class Client {
                 self.create_timed_cue(pre_wait: 0.01)
                 if current_cue_index != nil {
                     self.set_cue_number(cue_number: String(current_cue_index!))
+                    self.make_lx_cue(cue_number: String(current_cue_index!))
                     current_cue_index! += 1
                 }
-                self.make_lx_cue()
             }
             
             for cue in cue_table.times {
@@ -256,11 +270,10 @@ class Client {
                 
                 if current_cue_index != nil {
                     self.set_cue_number(cue_number: String(current_cue_index!))
+                    self.make_lx_cue(cue_number: String(current_cue_index!))
                     current_cue_index! += 1
                 }
-                
-                self.make_lx_cue()
-                
+
                 self.move_cue_to_group(group_id: group_id)
             }
             self.save_to_disk()
