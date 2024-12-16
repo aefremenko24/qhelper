@@ -25,6 +25,14 @@ struct qhelperApp: App {
                             Text("Add Files")
                         }
                     }
+                    .task {
+                        do {
+                            try await store.load()
+                        } catch {
+                            invalidFileAlert = true
+                            store.config = UserConfiguration()
+                        }
+                    }
                     .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
                     .border(Color.accentColor, width: isDroppingFile ? 1 : 0)
                     .background(Color.white.opacity(isDroppingFile ? 0.1 : 0))
