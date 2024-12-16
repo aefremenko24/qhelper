@@ -184,8 +184,7 @@ let PADDING: CGFloat = 30
 
 let CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time", "Time Stamp", "Time *Example MM:SS:MS*"]
 let EXAMPLE_LABELS = ["EXAMPLE FORM", "EXAMPLE", "SEE EXAMPLE BELOW"]
-let EMPTY_TIME_CELL_TOLERANCE: Int = 2
-let TYPICAL_CUE_TABLE_LENGTH: Int = 10
+let EMPTY_TIME_CELL_TOLERANCE: Int = 4
 
 // Default host used to connect to QLab workspaces
 let DEFAULT_HOST = "localhost"
@@ -208,8 +207,8 @@ let DEFAULT_PASSCODE = ""
 // Default QLab workspace name
 let DEFAULT_WORKSPACE_NAME = ""
 
-// Maximum number of seconds the client will wait for a response from QLab.
-let MAX_RESPONSE_TIME = 2.0
+// Maximum number of seconds the client will try to execute the LX_MIDI_SCRIPT if it fails the first time.
+let MAX_NUMBER_TRIES_FOR_LX_SCRIPT: Int = 2
 
 /*
  These are QLab application methods used to communicate with workspaces.
@@ -262,6 +261,8 @@ let SET_CUE_PARAMETER = "/cue/selected/parameterValue/%@"
 
 // Key used to specify the cue number for the network cue.
 let CUE_NUMBER_NETWORK_KEY = "cueNumber"
+
+let LX_MIDI_SCRIPT: URL? = Bundle.main.url(forResource: "LX_Cue_Script", withExtension: "scpt")
 
 /*
  These are common QLab responses sent over UDP.
@@ -363,14 +364,34 @@ func decode_qlab_response(data: Data?) -> QLabResponse? {
 }
 
 /**
+ Compiles an Apple String written in a file.
+ 
+ - Parameter script_path: Apple Script file path URL.
+ - Returns: NSAppleScript object used to compile the script.
+ */
+func compile_apple_script(script_path: URL) -> NSAppleScript? {
+    var error: NSDictionary? = nil
+    let script_compiler = NSAppleScript(contentsOf: script_path, error: &error)
+    script_compiler?.compileAndReturnError(&error)
+    return script_compiler
+}
+
+/**
  Executes an Apple String written in a file.
  
  - Parameter script_path: Apple Script file path URL.
  */
-func execute_apple_script(script_path: URL) {
+func execute_apple_script(script_path: URL, compiler: NSAppleScript? = nil) {
+    var num_tries_left: Int = MAX_NUMBER_TRIES_FOR_LX_SCRIPT
+    
     var error: NSDictionary? = nil
-    let script_executer = NSAppleScript(contentsOf: script_path, error: &error)
-    script_executer?.executeAndReturnError(&error)
+    let script_executer = compiler == nil ? NSAppleScript(contentsOf: script_path, error: &error) : compiler
+    
+    while num_tries_left > 0 {
+        script_executer?.executeAndReturnError(&error)
+        if error == nil { break }
+        num_tries_left -= 1
+    }
 }
 
 /**

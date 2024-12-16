@@ -14,7 +14,7 @@ import OSCKit
 class Client {
     let oscClient: OSCClient = OSCClient()
     var config: UserConfiguration
-    var lx_script: URL? = Bundle.main.url(forResource: "LX_Cue_Script", withExtension: "scpt")
+    var lx_script_compiler: NSAppleScript? = compile_apple_script(script_path: LX_MIDI_SCRIPT!)
     
     init() {
         self.config = UserConfiguration()
@@ -149,8 +149,8 @@ class Client {
      Makes the selected cues in QLab LX cues by running `LX_Cue_Script.scpt`.
      */
     func make_lx_cue(cue_number: String) {
-        if lx_script != nil && config.cue_type == CueType.MIDI {
-            execute_apple_script(script_path: lx_script!)
+        if lx_script_compiler != nil && LX_MIDI_SCRIPT != nil && config.cue_type == CueType.MIDI {
+            execute_apple_script(script_path: LX_MIDI_SCRIPT!, compiler: self.lx_script_compiler)
         } else if config.cue_type == CueType.NETWORK {
             self.set_network_cue_number_patch(patch_value: cue_number)
         }
