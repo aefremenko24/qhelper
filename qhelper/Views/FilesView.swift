@@ -37,8 +37,9 @@ struct FilesView: View {
                 let client = Client()
                 client.update_configuration(config: config)
                 client.connect_to_workspace(passcode_string: config.passcode)
-                client.parse_cue_dict(cue_tables: files.get_all_cue_tables())
+                client.send_cue_tables(cue_tables: files.get_all_cue_tables())
                 client.disconnect_from_workspace()
+                Task { await client.stop() }
             }
             .buttonStyle(.borderedProminent)
             .padding()
