@@ -12,10 +12,10 @@ struct DropView: View {
         @State var dropping: Bool = false
         
         VStack(spacing: 10) {
-            Image(systemName: "lightbulb")
-                .font(.system(size: 20))
+            Image(systemName: "document.viewfinder")
+                .font(.system(size: 30))
                 .foregroundStyle(.tint)
-            Text("Drag and drop your first cue sheet here!")
+            Text("Drop a lighting cues sheet here to begin")
                 .font(.system(size: 16, weight: .bold))
         }
         .padding()
