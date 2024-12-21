@@ -7,12 +7,13 @@
 
 import Foundation
 import Network
+import OSCKit
 
-struct QLabResponse: Decodable {
-    let workspace_id: String
-    let address: String
+struct QLabResponse: Codable {
     let status: String
     let data: String
+    let workspace_id: String
+    let address: String
 }
 
 class Server: ObservableObject {
@@ -20,11 +21,12 @@ class Server: ObservableObject {
     var connection: NWConnection?
     var queue = DispatchQueue.global(qos: .userInitiated)
     /// New data will be place in this variable to be received by observers
-    @Published private(set) public var messageReceived: Data?
+    @Published public var messagesReceived: [QLabResponse] = []
     /// When there is an active listening NWConnection this will be `true`
     @Published private(set) public var isReady: Bool = false
     /// Default value `true`, this will become false if the UDPListener ceases listening for any reason
     @Published public var listening: Bool = true
+    
     
     /// A convenience init using Int instead of NWEndpoint.Port
     convenience init(port: Int) {
@@ -39,18 +41,14 @@ class Server: ObservableObject {
             switch update {
             case .ready:
                 self.isReady = true
-                print("Listener connected to port \(port)")
             case .failed, .cancelled:
-                // Announce we are no longer able to listen
                 self.listening = false
                 self.isReady = false
-                print("Listener disconnected from port \(port)")
             default:
-                print("Listener connecting to port \(port)...")
+                break
             }
         }
         self.listener?.newConnectionHandler = { connection in
-            print("Listener receiving new message")
             self.createConnection(connection: connection)
         }
         self.listener?.start(queue: self.queue)
@@ -61,35 +59,31 @@ class Server: ObservableObject {
         self.connection?.stateUpdateHandler = { (newState) in
             switch (newState) {
             case .ready:
-                print("Listener ready to receive message - \(connection)")
-                self.receive()
+                self.listen_for_messages()
             case .cancelled, .failed:
-                print("Listener failed to receive message - \(connection)")
-                // Cancel the listener, something went wrong
                 self.listener?.cancel()
-                // Announce we are no longer able to listen
                 self.listening = false
             default:
-                print("Listener waiting to receive message - \(connection)")
+                break
             }
         }
         self.connection?.start(queue: .global())
     }
     
-    func receive() {
+    func listen_for_messages() {
         self.connection?.receiveMessage { data, context, isComplete, error in
-            if data != nil {
-                self.messageReceived = data
+            if data != nil && is_new_cue_response(response: data!){
+                let decoded = decode_qlab_response(data: data!)
+                if decoded != nil {
+                    DispatchQueue.main.async {
+                        self.messagesReceived.append(decoded!)
+                    }
+                }
             }
             if self.listening {
-                self.receive()
+                self.listen_for_messages()
             }
         }
-    }
-    
-    func get_message() -> Data? {
-        self.receive()
-        return messageReceived
     }
     
     func cancel() {

@@ -9,6 +9,7 @@ import Foundation
 import CoreXLSX
 import AppKit
 import UniformTypeIdentifiers
+import OSCKit
 
 enum ViewSelection: String, CaseIterable, Hashable, Codable, Identifiable {
     case DropView = "Add Files"
@@ -27,7 +28,9 @@ class Files: ObservableObject {
      - Parameter file: File object to be added.
      */
     func add(file: File) {
-        files.append(file)
+        DispatchQueue.main.async {
+            self.files.append(file)
+        }
     }
     
     /**
@@ -197,10 +200,6 @@ let DEFAULT_LISTENING_PORT: String = "53000"
 // Should be used to receive responses to requests sent to DEFAULT_LISTENING_PORT
 let DEFAULT_RESPONSE_PORT: Int = 53001
 
-// The UDP port on which QLab listens to plain text and attempts to interpret it as OSC.
-// Should be used as a back-up, when the default port connection fails.
-let PLAIN_TEXT_LISTENING_PORT: String = "53535"
-
 // Default passcode to the QLab workspace
 let DEFAULT_PASSCODE = ""
 
@@ -229,7 +228,7 @@ let SAVE_TO_DISK = "/workspace/%@/save"
 // Command to create a new cue in the given workspace.
 // The format argument is the workspace ID.
 // One OSC argument required — cue type, which is one of CueType enum strings.
-// Optional OSC argument {cue_ID} may be supplied. This will create a new cue within the group with the {cue_ID}.
+// Optional OSC argument {cue_ID} may be supplied. This will create a new cue right after the cue with the {cue_ID}.
 let CREATE_CUE = "/workspace/%@/new"
 
 // Command to set the name of the selected cue to a given string.
@@ -252,7 +251,11 @@ let SET_CUE_NUMBER = "/cue/selected/number"
 // Cart, or List whose unique ID is new_parent_cue_id.
 // The format argument is the workspace ID.
 // Two OSC arguments required — new_index and new_parent_cue_id.
-let MOVE_CUE = "/cue/selected/group/%@"
+let MOVE_CUE = "/workspace/%@/move/%@"
+
+// If the specified Group cue is expanded, displaying its children, collapse it.
+// One format argument is the cue number or id.
+let COLLAPSE_GROUP = "/cue_id/%@/collapse"
 
 // Command to set the cue parameter specified as a string key to a given value.
 // The format argument is the key of the parameter to be set.
@@ -261,6 +264,9 @@ let SET_CUE_PARAMETER = "/cue/selected/parameterValue/%@"
 
 // Key used to specify the cue number for the network cue.
 let CUE_NUMBER_NETWORK_KEY = "cueNumber"
+
+// Key used to specify the cue number for the MIDI cue.
+let CUE_NUMBER_MIDI_KEY = "MSC Q number"
 
 let LX_MIDI_SCRIPT: URL? = Bundle.main.url(forResource: "LX_Cue_Script", withExtension: "scpt")
 
@@ -356,9 +362,14 @@ func get_file_name(file_path: String) -> String {
 func decode_qlab_response(data: Data?) -> QLabResponse? {
     if data == nil { return nil }
     do {
-        let decoded = try JSONDecoder().decode(QLabResponse.self, from: data!)
+        let as_string = String(data: data!, encoding: .utf8)!
+        let startIndex = as_string.firstIndex(of: "{")!
+        let endIndex = as_string.lastIndex(of: "}")!
+        var newStr = String(as_string[startIndex...endIndex])
+        let decoded = try JSONDecoder().decode(QLabResponse.self, from: Data(newStr.utf8))
         return decoded
     } catch {
+        print(error)
         return nil
     }
 }
@@ -395,6 +406,23 @@ func execute_apple_script(script_path: URL, compiler: NSAppleScript? = nil) {
 }
 
 /**
+ Executes an Apple String from the given string.
+ 
+ - Parameter script: Apple Script as a string.
+ */
+func execute_apple_script(script: String) {
+    var error: NSDictionary? = nil
+    let script_executer = NSAppleScript(source: script)
+    script_executer?.executeAndReturnError(&error)
+}
+
+func is_new_cue_response(response: Data) -> Bool {
+    let str = String(data: response, encoding: .utf8)
+    if str == nil { return false }
+    return str!.contains("/new")
+}
+
+/**
  Opens the file dialog window and lets the user select a file or a directory.
  
  - Parameters:
@@ -417,4 +445,11 @@ func open_file_dialog(allow_multiple_selection: Bool = false,
     } else {
         return ""
     }
+}
+
+/**
+ Executes a simple Apple Script to request user permission to Apple System Events if not already granted.
+ */
+func request_apple_events_permission() {
+    execute_apple_script(script: "osascript -e 'tell application \"System Events\" to keystroke \"a\"'")
 }

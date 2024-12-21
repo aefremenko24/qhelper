@@ -7,9 +7,12 @@
 
 import SwiftUI
 
+@MainActor
 struct FilesView: View {
     @ObservedObject var files: Files
     @ObservedObject var config: UserConfiguration
+    var client: Client
+    var server: Server
     
     var body: some View {
         VStack {
@@ -34,12 +37,19 @@ struct FilesView: View {
             .padding()
             
             Button("Add all to QLab") {
-                let client = Client()
                 client.update_configuration(config: config)
                 client.connect_to_workspace(passcode_string: config.passcode)
                 client.send_cue_tables(cue_tables: files.get_all_cue_tables())
                 client.disconnect_from_workspace()
-                Task { await client.stop() }
+            }
+            .buttonStyle(.borderedProminent)
+            .padding()
+            
+            Button("Group Cues") {
+                let qlab_responses = server.messagesReceived
+                client.move_cues_to_groups(qlab_responses: qlab_responses)
+                client.cue_groups.removeAll()
+                server.messagesReceived.removeAll()
             }
             .buttonStyle(.borderedProminent)
             .padding()
@@ -50,5 +60,5 @@ struct FilesView: View {
 #Preview {
     let files: Files = Files()
     let config: UserConfiguration = UserConfiguration()
-    FilesView(files: files, config: config)
+    FilesView(files: files, config: config, client: Client(), server: Server(port: DEFAULT_RESPONSE_PORT))
 }

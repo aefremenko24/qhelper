@@ -14,11 +14,13 @@ struct qhelperApp: App {
     @State var failedConfigLoadAlert: Bool = false
     @State var isDroppingFile: Bool = false
     @StateObject private var store: QHelperStore = QHelperStore()
+    let client: Client = Client()
+    let server: Server = Server(port: DEFAULT_RESPONSE_PORT)
     
     var body: some Scene {
         WindowGroup {
             TabView {
-                MainView(files: files, config: store.config)
+                MainView(files: files, config: store.config, client: client, server: server)
                     .tabItem {
                         HStack {
                             Image(systemName: "folder")

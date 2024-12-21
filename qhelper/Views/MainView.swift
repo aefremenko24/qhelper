@@ -12,11 +12,14 @@ struct MainView: View {
     @ObservedObject var config: UserConfiguration
     @State var isDisplayingAlert: Bool = false
     
+    var client: Client
+    var server: Server
+    
     var body: some View {
         if files.files.isEmpty {
             DropView()
         } else {
-            FilesView(files: files, config: config)
+            FilesView(files: files, config: config, client: client, server: server)
         }
     }
 }

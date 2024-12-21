@@ -15,7 +15,7 @@ struct DropView: View {
             Image(systemName: "document.viewfinder")
                 .font(.system(size: 30))
                 .foregroundStyle(.tint)
-            Text("Drop a lighting cues sheet here to begin")
+            Text("Drop a lighting cue sheet here to begin")
                 .font(.system(size: 16, weight: .bold))
         }
         .padding()
