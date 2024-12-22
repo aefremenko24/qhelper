@@ -15,9 +15,8 @@ import OSCKit
 class Client {
     let oscClient: OSCClient = OSCClient()
     var config: UserConfiguration
-    var lx_script_compiler: NSAppleScript? = compile_apple_script(script_path: LX_MIDI_SCRIPT!)
     var num_cues_added: Int = 0
-    var cue_groups: [Int: [Int]] = [:]
+    var cue_groups: [Int : [Int]] = [:]
     
     init() {
         self.config = UserConfiguration()
@@ -130,7 +129,6 @@ class Client {
     func create_group(group_name: String) -> Int {
         let group_num = self.create_cue(cue_type: CueType.GROUP)
         self.set_cue_name(name: group_name)
-        cue_groups[group_num] = []
         return group_num
     }
     
@@ -176,25 +174,21 @@ class Client {
     
     /**
      For the given patch value, set it as the value for the cue number parameter of the selected MIDI cue.
-     Also renames the cue into `LX patch_value`
-     
-     - Parameters:
-        - patch_value: Value to be set as a cue number of the MIDI cue.
      */
-    func set_midi_cue_number_patch(patch_value: String) {
-        if self.lx_script_compiler != nil && LX_MIDI_SCRIPT != nil {
-            execute_apple_script(script_path: LX_MIDI_SCRIPT!, compiler: self.lx_script_compiler)
+    func set_midi_cue_number_patch() {
+        if LX_MIDI_SCRIPT != nil {
+            execute_apple_script(script_path: LX_MIDI_SCRIPT!)
         }
     }
     
     /**
      Makes the selected cues in QLab LX cues by running `LX_Cue_Script.scpt`.
      */
-    func make_lx_cue(cue_number: String) {
+    func make_lx_cue(cue_number: Int?) {
         if config.cue_type == CueType.MIDI {
-            self.set_midi_cue_number_patch(patch_value: cue_number)
-        } else if config.cue_type == CueType.NETWORK {
-            self.set_network_cue_number_patch(patch_value: cue_number)
+            self.set_midi_cue_number_patch()
+        } else if config.cue_type == CueType.NETWORK && cue_number != nil {
+            self.set_network_cue_number_patch(patch_value: String(cue_number!))
         }
     }
     
@@ -249,23 +243,12 @@ class Client {
         - cue_type: Cue type (see CueType enum in Utils.swift).
         - cue_number: Optional, desired number of the cue as a string.
      */
-    func create_blackout_cue(cue_type: CueType, cue_num: String? = nil) -> Int {
+    func create_blackout_cue(cue_type: CueType, cue_num: Int? = nil) -> Int {
         let cue_number = self.create_cue(cue_type: cue_type)
         if cue_num != nil {
-            self.set_cue_number(cue_number: cue_num!)
+            self.set_cue_number(cue_number: String(cue_num!))
         }
         return cue_number
-    }
-    
-    /**
-     Moves the selected cue to the given group.
-     
-     - Parameters:
-        - group_id: ID of the group to move the selected cue to.
-     */
-    func move_cue_to_group(group_id: String) {
-        let method_call = String(format: MOVE_CUE, group_id)
-        self.send_command(command: method_call)
     }
     
     /**
@@ -274,20 +257,67 @@ class Client {
      - Parameters:
         - qlab_responses: All QLab responses collected.
      */
-    func move_cues_to_groups(qlab_responses: [QLabResponse]) {
-        do {
-            for key in self.cue_groups.keys {
-                let group_id = qlab_responses[key].data
-                for (cue_index, cue_id) in self.cue_groups[key]!.enumerated() {
-                    let method_call = String(format: MOVE_CUE, self.config.workspace, qlab_responses[cue_id].data)
-                    let args: Array<any OSCValue> = [cue_index, group_id]
-                    self.send_command(command: method_call, args: args)
-                }
-                self.send_command(command: String(format: COLLAPSE_GROUP, group_id))
+    func move_cues_to_groups(cue_groups: [Int: [Int]], qlab_responses: [QLabResponse]) {
+        for key in cue_groups.keys {
+            let group_id = qlab_responses[key].data
+            for (cue_index, cue_id) in cue_groups[key]!.enumerated() {
+                let method_call = String(format: MOVE_CUE, self.config.workspace, qlab_responses[cue_id].data)
+                let args: Array<any OSCValue> = [cue_index, group_id]
+                self.send_command(command: method_call, args: args)
             }
-        } catch {
-            print(error)
+            self.send_command(command: String(format: COLLAPSE_GROUP, group_id))
         }
+    }
+    
+    /**
+     Adds the given cue index to the `cue_groups` dictionary under the `group_index` key.
+     */
+    func assign_cue_to_group(cue_index: Int, group_index: Int) {
+        self.cue_groups[group_index]?.append(cue_index)
+    }
+    
+    /**
+     Sends all cues in the given cue table to QLab.
+     
+     - Parameter cue_table: cue table to be added.
+     */
+    func send_cue_table(cue_table: CueTable) -> (Int, [Int]) {
+        var added_cue_indeces: [Int] = []
+        var current_cue_index: Int = cue_table.start_at_index.isEmpty ? num_cues_added : Int(cue_table.start_at_index)!
+        
+        let blackout_cue_num = self.create_blackout_cue(cue_type: config.cue_type, cue_num: current_cue_index)
+        self.make_lx_cue(cue_number: current_cue_index)
+        current_cue_index += 1
+        
+        if !config.include_blackout_cue {
+            added_cue_indeces.append(blackout_cue_num)
+        }
+        
+        let group_number = self.create_group(group_name: cue_table.name)
+        cue_groups[group_number] = []
+        self.set_cue_number(cue_number: "")
+        
+        if cue_table.audio_file != nil {
+            let file_path = cue_table.audio_file!
+            added_cue_indeces.append(self.create_audio_cue(file_path: file_path))
+        }
+        
+        if !config.include_blackout_cue {
+            added_cue_indeces.append(self.create_timed_cue(pre_wait: 0.01))
+            self.set_cue_number(cue_number: String(current_cue_index))
+            self.make_lx_cue(cue_number: current_cue_index)
+            current_cue_index += 1
+        }
+        
+        for cue in cue_table.times {
+            added_cue_indeces.append(self.create_timed_cue(pre_wait: cue.value))
+        
+            self.set_cue_number(cue_number: String(current_cue_index))
+            self.make_lx_cue(cue_number: current_cue_index)
+            current_cue_index += 1
+        }
+        
+        return (group_number, added_cue_indeces)
     }
     
     /**
@@ -297,52 +327,20 @@ class Client {
 
      - Parameters:
         - cue_tables: List containing QLab cue information.
+     - Returns: Dictionary with cue group assignments, where keys are group indeces and their values are arrays of cue indeces in that group.
      */
-    func send_cue_tables(cue_tables: [CueTable]) {
+    func send_cue_tables(cue_tables: [CueTable]) -> [Int : [Int]] {
         let cue_tables = cue_tables.sorted(by: { $0 < $1})
-        for (cue_table_index, cue_table) in cue_tables.enumerated() {
-            var current_cue_index: Int? = nil
-            if !cue_table.start_at_index.isEmpty {
-                current_cue_index = Int(cue_table.start_at_index)
-            }
-            
-            if config.include_blackout_cue {
-                self.create_blackout_cue(cue_type: config.cue_type, cue_num: current_cue_index == nil ? nil : String(current_cue_index!))
-                if current_cue_index != nil {
-                    self.make_lx_cue(cue_number: String(current_cue_index!))
-                    current_cue_index! += 1
-                }
-            }
-            
-            let group_number = self.create_group(group_name: cue_table.name)
-            let group_id = current_cue_index == nil ? "G\(cue_table_index)" : "G\(current_cue_index!)"
-            self.set_cue_number(cue_number: group_id)
-            
-            if cue_table.audio_file != nil {
-                let file_path = cue_table.audio_file!
-                self.cue_groups[group_number]?.append(self.create_audio_cue(file_path: file_path))
-            }
-            
-            if !config.include_blackout_cue {
-                self.cue_groups[group_number]?.append(self.create_timed_cue(pre_wait: 0.01))
-                if current_cue_index != nil {
-                    self.set_cue_number(cue_number: String(current_cue_index!))
-                    self.make_lx_cue(cue_number: String(current_cue_index!))
-                    current_cue_index! += 1
-                }
-            }
-            
-            for cue in cue_table.times {
-                self.cue_groups[group_number]?.append(self.create_timed_cue(pre_wait: cue.value))
-                
-                if current_cue_index != nil {
-                    self.set_cue_number(cue_number: String(current_cue_index!))
-                    self.make_lx_cue(cue_number: String(current_cue_index!))
-                    current_cue_index! += 1
-                }
-            }
-            self.save_to_disk()
+        
+        for cue_table in cue_tables {
+            let (group_index, cue_indeces) = send_cue_table(cue_table: cue_table)
+            cue_groups[group_index] = cue_indeces
         }
-        print(self.num_cues_added)
+        
+        self.save_to_disk()
+        
+        let cue_groups_copy = self.cue_groups
+        self.cue_groups = [:]
+        return cue_groups_copy
     }
 }

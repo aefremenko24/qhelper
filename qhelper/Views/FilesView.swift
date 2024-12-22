@@ -39,16 +39,11 @@ struct FilesView: View {
             Button("Add all to QLab") {
                 client.update_configuration(config: config)
                 client.connect_to_workspace(passcode_string: config.passcode)
-                client.send_cue_tables(cue_tables: files.get_all_cue_tables())
+                let cue_groups = client.send_cue_tables(cue_tables: files.get_all_cue_tables())
                 client.disconnect_from_workspace()
-            }
-            .buttonStyle(.borderedProminent)
-            .padding()
-            
-            Button("Group Cues") {
+                
                 let qlab_responses = server.messagesReceived
-                client.move_cues_to_groups(qlab_responses: qlab_responses)
-                client.cue_groups.removeAll()
+                client.move_cues_to_groups(cue_groups: cue_groups, qlab_responses: qlab_responses)
                 server.messagesReceived.removeAll()
             }
             .buttonStyle(.borderedProminent)

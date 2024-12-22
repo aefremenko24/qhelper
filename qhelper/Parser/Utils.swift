@@ -375,28 +375,15 @@ func decode_qlab_response(data: Data?) -> QLabResponse? {
 }
 
 /**
- Compiles an Apple String written in a file.
- 
- - Parameter script_path: Apple Script file path URL.
- - Returns: NSAppleScript object used to compile the script.
- */
-func compile_apple_script(script_path: URL) -> NSAppleScript? {
-    var error: NSDictionary? = nil
-    let script_compiler = NSAppleScript(contentsOf: script_path, error: &error)
-    script_compiler?.compileAndReturnError(&error)
-    return script_compiler
-}
-
-/**
  Executes an Apple String written in a file.
  
  - Parameter script_path: Apple Script file path URL.
  */
-func execute_apple_script(script_path: URL, compiler: NSAppleScript? = nil) {
+func execute_apple_script(script_path: URL) {
     var num_tries_left: Int = MAX_NUMBER_TRIES_FOR_LX_SCRIPT
     
     var error: NSDictionary? = nil
-    let script_executer = compiler == nil ? NSAppleScript(contentsOf: script_path, error: &error) : compiler
+    let script_executer = NSAppleScript(contentsOf: script_path, error: &error)
     
     while num_tries_left > 0 {
         script_executer?.executeAndReturnError(&error)
