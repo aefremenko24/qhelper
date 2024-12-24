@@ -1,5 +1,5 @@
 {
-  "originHash" : "6941b838d7af53760998a2e9104f8f769154c1bf3b3e1771d33784b7d1c734ff",
+  "originHash" : "62dd09d19f3a7f7d7282b75ed15854c63b4d02d220e8b152e7dfd4bd9a1972d6",
   "pins" : [
     {
       "identity" : "cocoaasyncsocket",
@@ -13,7 +13,7 @@
     {
       "identity" : "corexlsx",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CoreOffice/CoreXLSX.git",
+      "location" : "https://github.com/CoreOffice/CoreXLSX",
       "state" : {
         "revision" : "1391f3832ea2eeee5186ea8abb81ea49ed0609cc",
         "version" : "0.14.2"

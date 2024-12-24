@@ -96,16 +96,16 @@ struct SettingsView: View {
                 }
                 
                 HStack {
-                    Toggle(isOn: $config.include_blackout_cue) {
+                    Toggle(isOn: $config.bring_out_blackout) {
                         Text("Blackout cues before cue groups")
-                        if config.include_blackout_cue {
+                        if config.bring_out_blackout {
                             Text("Will include a blackout cue before each cue group")
                         } else {
                             Text("Will include a blackout cue inside each cue group")
                         }
                         
                     }
-                    .onChange(of: config.include_blackout_cue) { _ in
+                    .onChange(of: config.bring_out_blackout) { _ in
                         saveAction()
                     }
                     

@@ -40,10 +40,14 @@ struct FilesView: View {
                 client.update_configuration(config: config)
                 client.connect_to_workspace(passcode_string: config.passcode)
                 let cue_groups = client.send_cue_tables(cue_tables: files.get_all_cue_tables())
-                client.disconnect_from_workspace()
+                //client.disconnect_from_workspace()
                 
-                let qlab_responses = server.messagesReceived
-                client.move_cues_to_groups(cue_groups: cue_groups, qlab_responses: qlab_responses)
+                for cue_group in cue_groups {
+                    print(server.messagesReceived.count)
+                    cue_group.update_unique_id(qlab_responses: server.messagesReceived)
+                    client.move_cue_children(cue: cue_group)
+                }
+                
                 server.messagesReceived.removeAll()
             }
             .buttonStyle(.borderedProminent)

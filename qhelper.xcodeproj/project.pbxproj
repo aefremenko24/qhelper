@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		410657E12D1A762B0021F24E /* OSCKit in Frameworks */ = {isa = PBXBuildFile; productRef = 410657E02D1A762B0021F24E /* OSCKit */; };
+		410657E32D1A762B0021F24E /* OSCKitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 410657E22D1A762B0021F24E /* OSCKitCore */; };
 		41102E602CF2F3140040E980 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41102E5F2CF2F3140040E980 /* SystemConfiguration.framework */; };
-		413C832D2CF55445000E6859 /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = 413C832C2CF55445000E6859 /* CoreXLSX */; };
-		4177740B2CF7C957004FA3E0 /* OSCKit in Frameworks */ = {isa = PBXBuildFile; productRef = 4177740A2CF7C957004FA3E0 /* OSCKit */; };
-		4177740D2CF7C957004FA3E0 /* OSCKitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4177740C2CF7C957004FA3E0 /* OSCKitCore */; };
+		4158601D2D1A777400B8FD7E /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = 4158601C2D1A777400B8FD7E /* CoreXLSX */; };
 		41FEF6F42D036FE100DCAD4A /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 41FEF6F32D036FE100DCAD4A /* README.md */; };
 /* End PBXBuildFile section */
 
@@ -76,10 +76,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4177740D2CF7C957004FA3E0 /* OSCKitCore in Frameworks */,
-				413C832D2CF55445000E6859 /* CoreXLSX in Frameworks */,
-				4177740B2CF7C957004FA3E0 /* OSCKit in Frameworks */,
+				4158601D2D1A777400B8FD7E /* CoreXLSX in Frameworks */,
 				41102E602CF2F3140040E980 /* SystemConfiguration.framework in Frameworks */,
+				410657E12D1A762B0021F24E /* OSCKit in Frameworks */,
+				410657E32D1A762B0021F24E /* OSCKitCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,9 +150,9 @@
 			);
 			name = qhelper;
 			packageProductDependencies = (
-				413C832C2CF55445000E6859 /* CoreXLSX */,
-				4177740A2CF7C957004FA3E0 /* OSCKit */,
-				4177740C2CF7C957004FA3E0 /* OSCKitCore */,
+				410657E02D1A762B0021F24E /* OSCKit */,
+				410657E22D1A762B0021F24E /* OSCKitCore */,
+				4158601C2D1A777400B8FD7E /* CoreXLSX */,
 			);
 			productName = qhelper;
 			productReference = 41F5C2C82CEBA03C00721504 /* qhelper.app */;
@@ -237,9 +237,8 @@
 			mainGroup = 41F5C2BF2CEBA03C00721504;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				413C82A12CF552EF000E6859 /* XCRemoteSwiftPackageReference "CoreXLSX" */,
-				417774092CF7C957004FA3E0 /* XCRemoteSwiftPackageReference "OSCKit" */,
-				41419E952D15E7AB0037B26B /* XCRemoteSwiftPackageReference "SwiftOSC" */,
+				410657DF2D1A762B0021F24E /* XCRemoteSwiftPackageReference "OSCKit" */,
+				4158601B2D1A777400B8FD7E /* XCRemoteSwiftPackageReference "CoreXLSX" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 41F5C2C92CEBA03C00721504 /* Products */;
@@ -627,23 +626,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		413C82A12CF552EF000E6859 /* XCRemoteSwiftPackageReference "CoreXLSX" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/CoreOffice/CoreXLSX.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.14.2;
-			};
-		};
-		41419E952D15E7AB0037B26B /* XCRemoteSwiftPackageReference "SwiftOSC" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ExistentialAudio/SwiftOSC";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.3.1;
-			};
-		};
-		417774092CF7C957004FA3E0 /* XCRemoteSwiftPackageReference "OSCKit" */ = {
+		410657DF2D1A762B0021F24E /* XCRemoteSwiftPackageReference "OSCKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/orchetect/OSCKit";
 			requirement = {
@@ -651,22 +634,31 @@
 				minimumVersion = 1.0.1;
 			};
 		};
+		4158601B2D1A777400B8FD7E /* XCRemoteSwiftPackageReference "CoreXLSX" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/CoreOffice/CoreXLSX";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.14.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		413C832C2CF55445000E6859 /* CoreXLSX */ = {
+		410657E02D1A762B0021F24E /* OSCKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = CoreXLSX;
-		};
-		4177740A2CF7C957004FA3E0 /* OSCKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 417774092CF7C957004FA3E0 /* XCRemoteSwiftPackageReference "OSCKit" */;
+			package = 410657DF2D1A762B0021F24E /* XCRemoteSwiftPackageReference "OSCKit" */;
 			productName = OSCKit;
 		};
-		4177740C2CF7C957004FA3E0 /* OSCKitCore */ = {
+		410657E22D1A762B0021F24E /* OSCKitCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 417774092CF7C957004FA3E0 /* XCRemoteSwiftPackageReference "OSCKit" */;
+			package = 410657DF2D1A762B0021F24E /* XCRemoteSwiftPackageReference "OSCKit" */;
 			productName = OSCKitCore;
+		};
+		4158601C2D1A777400B8FD7E /* CoreXLSX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4158601B2D1A777400B8FD7E /* XCRemoteSwiftPackageReference "CoreXLSX" */;
+			productName = CoreXLSX;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
