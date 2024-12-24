@@ -59,7 +59,7 @@ class Cue {
         if unique_id == nil { return }
         
         if let index = Int(self.unique_id!) {
-            if index != 0 && index < qlab_responses.count {
+            if index >= 0 && index < qlab_responses.count {
                 self.unique_id = qlab_responses[index].data
             }
         }

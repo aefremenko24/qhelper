@@ -49,6 +49,8 @@ class Client {
      */
     func add_cue(_ cue: Cue) {
         cue.unique_id = String(create_cue(cue_type: cue.type))
+        Thread.sleep(forTimeInterval: 0.01)
+        
         set_cue_number(cue_number: cue.number)
         if cue.pre_wait_time != nil {
             set_cue_prewait(time_stamp: cue.pre_wait_time!)
@@ -56,11 +58,12 @@ class Client {
         if cue.name != nil {
             set_cue_name(name: cue.name!)
         }
-        if cue.is_lx_cue {
-            make_lx_cue(cue_number: cue.number)
-        }
         if cue.file_path != nil {
             self.attach_file_target(file_path: cue.file_path!)
+        }
+        if cue.is_lx_cue {
+            Thread.sleep(forTimeInterval: 0.04)
+            make_lx_cue(cue_number: cue.number)
         }
     }
     
@@ -317,17 +320,19 @@ class Client {
         let group = Cue(name: cue_table.name, is_lx_cue: false, type: CueType.GROUP)
         
         let blackout_cue = Cue(number: String(current_cue_index), type: config.cue_type)
-        self.add_cue(blackout_cue)
+        if config.bring_out_blackout { self.add_cue(blackout_cue) }
         current_cue_index += 1
         
         self.add_cue(group)
         
         if cue_table.audio_file != nil {
-            let audio_cue = Cue(file_path: cue_table.audio_file, type: CueType.AUDIO)
+            let audio_cue = Cue(is_lx_cue: false, file_path: cue_table.audio_file, type: CueType.AUDIO)
             self.add_cue(audio_cue)
+            group.add_child(audio_cue)
         }
         
         if !config.bring_out_blackout {
+            self.add_cue(blackout_cue)
             group.add_child(blackout_cue)
         }
         
@@ -360,7 +365,6 @@ class Client {
         }
         
         self.save_to_disk()
-        self.num_cues_added = 0
         
         return cue_groups
     }

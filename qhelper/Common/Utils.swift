@@ -365,7 +365,7 @@ func decode_qlab_response(data: Data?) -> QLabResponse? {
         let as_string = String(data: data!, encoding: .utf8)!
         let startIndex = as_string.firstIndex(of: "{")!
         let endIndex = as_string.lastIndex(of: "}")!
-        var newStr = String(as_string[startIndex...endIndex])
+        let newStr = String(as_string[startIndex...endIndex])
         let decoded = try JSONDecoder().decode(QLabResponse.self, from: Data(newStr.utf8))
         return decoded
     } catch {

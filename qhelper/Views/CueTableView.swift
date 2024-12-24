@@ -72,7 +72,9 @@ struct CueTableView: View {
                 let _ = provider.loadObject(ofClass: URL.self) { object, error in
                     if let url = object {
                         do {
-                            table.audio_file = url.path(percentEncoded: false)
+                            DispatchQueue.main.async {
+                                table.audio_file = url.path(percentEncoded: false)
+                            }
                         }
                         
                     }
