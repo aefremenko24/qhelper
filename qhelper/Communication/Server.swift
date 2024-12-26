@@ -21,7 +21,7 @@ class Server: ObservableObject {
     var connection: NWConnection?
     var queue = DispatchQueue.global(qos: .userInitiated)
     /// New data will be place in this variable to be received by observers
-    @Published public var messagesReceived: [QLabResponse] = []
+    @Published public var messageReceived: QLabResponse?
     /// When there is an active listening NWConnection this will be `true`
     @Published private(set) public var isReady: Bool = false
     /// Default value `true`, this will become false if the UDPListener ceases listening for any reason
@@ -71,15 +71,17 @@ class Server: ObservableObject {
     }
     
     func listen_for_messages() {
-        self.connection?.receiveMessage { data, context, isComplete, error in
-            if data != nil && is_new_cue_response(response: data!){
-                let decoded = decode_qlab_response(data: data!)
-                if decoded != nil {
+        self.connection?.receiveMessage { [weak self] data, context, isComplete, error in
+            guard let self = self else { return }
+            
+            if let data = data, is_new_cue_response(response: data) {
+                if let decoded = decode_qlab_response(data: data) {
                     DispatchQueue.main.async {
-                        self.messagesReceived.append(decoded!)
+                        self.messageReceived = decoded
                     }
                 }
             }
+
             if self.listening {
                 self.listen_for_messages()
             }

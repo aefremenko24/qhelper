@@ -73,7 +73,8 @@ struct qhelperApp: App {
                         do {
                             try await store.save(config: store.config)
                         } catch {
-                            fatalError(error.localizedDescription)
+                            invalidFileAlert = true
+                            store.config = UserConfiguration()
                         }
                     }
                 }

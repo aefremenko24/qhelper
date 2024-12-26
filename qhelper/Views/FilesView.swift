@@ -13,61 +13,52 @@ struct FilesView: View {
     @ObservedObject var config: UserConfiguration
     var client: Client
     var server: Server
-    @State var loading: Bool = false
+    @State private var server_responses: [QLabResponse] = []
     
     var body: some View {
-        ZStack {
-            VStack {
-                ScrollView {
-                    ForEach($files.files) { $file in
-                        FileView(file: file)
-                            .contextMenu {
-                                Button(action: {
-                                    files.delete(uuid: file.id)
-                                }){
-                                    Text("Delete File")
-                                }
+        VStack {
+            ScrollView {
+                ForEach($files.files) { $file in
+                    FileView(file: file)
+                        .contextMenu {
+                            Button(action: {
+                                files.delete(uuid: file.id)
+                            }){
+                                Text("Delete File")
                             }
-                        Divider()
-                    }
-                    
-                    Text("Add more sheets by dragging them here")
-                        .font(.headline)
-                        .foregroundColor(Color.gray)
-                        .fontWeight(.medium)
+                        }
+                    Divider()
                 }
-                .padding()
                 
-                Button("Add all to QLab") {
-                    loading = true
-                    
-                    client.update_configuration(config: config)
-                    client.connect_to_workspace(passcode_string: config.passcode)
-                    let cue_groups = client.send_cue_tables(cue_tables: files.get_all_cue_tables())
-                    
+                Text("Add more sheets by dragging them here")
+                    .font(.headline)
+                    .foregroundColor(Color.gray)
+                    .fontWeight(.medium)
+            }
+            .padding()
+            
+            Button("Add all to QLab") {
+                client.update_configuration(config: config)
+                client.connect_to_workspace(passcode_string: config.passcode)
+                let cue_groups = client.send_cue_tables(cue_tables: files.get_all_cue_tables())
+                
+                Task {
                     for cue_group in cue_groups {
-                        cue_group.update_unique_id(qlab_responses: server.messagesReceived)
+                        cue_group.update_unique_id(qlab_responses: self.server_responses)
                         client.move_cue_children(cue: cue_group)
                     }
-                    
-                    server.messagesReceived = []
-                    client.num_cues_added = 0
-                    
-                    loading = false
                 }
-                .buttonStyle(.borderedProminent)
-                .padding()
+                
+                self.server_responses.removeAll()
+                client.num_cues_added = 0
             }
-            
-            if loading {
-                ProgressView()
-            }
+            .buttonStyle(.borderedProminent)
+            .padding()
         }
+        .onReceive(server.$messageReceived, perform: { message in
+            if message != nil {
+                self.server_responses.append(message!)
+            }
+        })
     }
-}
-
-#Preview {
-    let files: Files = Files()
-    let config: UserConfiguration = UserConfiguration()
-    FilesView(files: files, config: config, client: Client(), server: Server(port: DEFAULT_RESPONSE_PORT))
 }
