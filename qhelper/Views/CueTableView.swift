@@ -56,6 +56,9 @@ struct CueTableView: View {
                     }
                 }
             )
+            .onTapGesture {
+                isExpanded = !isExpanded
+            }
             
             if isDroppingFile {
                 RoundedRectangle(cornerRadius: 5)

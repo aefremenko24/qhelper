@@ -43,5 +43,8 @@ struct FileView: View {
                 }
             }
         )
+        .onTapGesture {
+            isExpanded = !isExpanded
+        }
     }
 }

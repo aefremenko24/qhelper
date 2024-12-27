@@ -364,8 +364,6 @@ class Client {
             cue_groups.append(cue_group)
         }
         
-        self.save_to_disk()
-        
         return cue_groups
     }
 }
