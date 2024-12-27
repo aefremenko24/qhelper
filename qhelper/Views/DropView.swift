@@ -12,7 +12,7 @@ struct DropView: View {
         @State var dropping: Bool = false
         
         VStack(spacing: 10) {
-            Image(systemName: "document.viewfinder")
+            Image(systemName: "doc.viewfinder")
                 .font(.system(size: 30))
                 .foregroundStyle(.tint)
             Text("Drop a lighting cue sheet here to begin")
