@@ -51,9 +51,16 @@ struct FilesView: View {
                 
                 self.server_responses.removeAll()
                 client.num_cues_added = 0
+                
+                client.save_to_disk()
             }
             .buttonStyle(.borderedProminent)
-            .padding()
+            .padding(.top)
+            
+            Button("Clear all files") {
+                files.files.removeAll()
+            }
+            .buttonStyle(.borderless)
         }
         .onReceive(server.$messageReceived, perform: { message in
             if message != nil {
