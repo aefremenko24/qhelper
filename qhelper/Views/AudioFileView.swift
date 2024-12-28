@@ -10,11 +10,13 @@ import SwiftUI
 struct AudioFileView: View {
     @ObservedObject var cue_table: CueTable
     @State var highlighted: Bool = false
+    @Binding var isDroppingFile: Bool
     
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 3)
                 .fill(Color.white.opacity(highlighted ? 0.15 : 0.1))
+                .border(Color.green, width: isDroppingFile ? 1 : 0)
                 .frame(height: 40)
             HStack {
                 if (cue_table.audio_file == nil) {

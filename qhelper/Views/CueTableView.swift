@@ -19,7 +19,7 @@ struct CueTableView: View {
             DisclosureGroup(
                 isExpanded: $isExpanded,
                 content: {
-                    AudioFileView(cue_table: table)
+                    AudioFileView(cue_table: table, isDroppingFile: $isDroppingFile)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 7)
                     if !table.times.isEmpty {
@@ -60,9 +60,9 @@ struct CueTableView: View {
                 isExpanded = !isExpanded
             }
             
-            if isDroppingFile {
+            if isDroppingFile && !isExpanded {
                 RoundedRectangle(cornerRadius: 5)
-                    .fill(Color.white.opacity(0.20))
+                    .fill(Color.black.opacity(0.20))
                     .background(.ultraThinMaterial.opacity(0.80))
                     .blur(radius: 1)
                 Text("Add audio file")
