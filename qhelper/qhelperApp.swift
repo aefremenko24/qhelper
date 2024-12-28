@@ -98,6 +98,7 @@ struct qhelperApp: App {
                         Text("Got it")
                     ))
                 }
+                .padding(.horizontal, PADDING)
             }
             .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
             .preferredColorScheme(.dark)
