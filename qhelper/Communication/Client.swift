@@ -11,14 +11,17 @@ import OSCKit
 /**
  UDP client responsible for senting OSC messages to QLab workspaces.
  */
-@MainActor
 class Client {
     let oscClient: OSCClient = OSCClient()
     var config: UserConfiguration
     var num_cues_added: Int = 0
+    var command_trace: [(String, OSCValues)]?
     
-    init() {
+    init(keep_trace: Bool = false) {
         self.config = UserConfiguration()
+        if keep_trace {
+            self.command_trace = []
+        }
     }
     
     /**
@@ -32,13 +35,18 @@ class Client {
      Sends the given command to QLab for a maximum number of tries of MAX_NUM_TRIES.
      
      - Parameters:
-     - command: Command to send.
-     - args: Command arguments.
+        - command: Command to send.
+        - args: Command arguments.
+        - command_buffer: Optional trace buffer to which to write the commands sent (used for testing).
      */
     func send_command(command: String, args: OSCValues = []) {
         let msg = OSCMessage(command, values: args)
         do {
             try self.oscClient.send(msg, to: self.config.host, port: UInt16(self.config.send_port)!)
+            
+            if command_trace != nil {
+                command_trace?.append((command, args))
+            }
         } catch let err {
             print("error: \(err)")
         }
@@ -102,7 +110,7 @@ class Client {
      Creates a cue of a given type.
      
      - Parameters:
-     - cue_type: Cue type (see CueType enum in Utils.swift).
+        - cue_type: Cue type (see CueType enum in Utils.swift).
      - Returns: The index at which the cue was added. (For example, first added cue for the given call will be 0).
      */
     func create_cue(cue_type: CueType) -> Int {
@@ -120,7 +128,7 @@ class Client {
      Sets the pre-wait time for the currently selected cue.
      
      - Parameters:
-     - time_stamp: Time stamp of the cue pre-wait time in the format MM:SS.ms
+        - time_stamp: Time stamp of the cue pre-wait time in the format MM:SS.ms
      */
     func set_cue_prewait(time_stamp: Float) {
         let time_stamp = time_stamp == 0 ? 0.02 : time_stamp
@@ -133,7 +141,7 @@ class Client {
      Sets the name for the currently selected cue.
      
      - Parameters:
-     - name: Name of the cue as a string.
+        - name: Name of the cue as a string.
      */
     func set_cue_name(name: String) {
         let method_call = SET_CUE_NAME
@@ -142,36 +150,10 @@ class Client {
     }
     
     /**
-     Creates a cue group in the given workspace.
-     
-     - Parameters:
-     - group_name: Name of the cue group.
-     - Returns: The index at which the cue was added. (For example, first added cue for the given call will be 0).
-     */
-    func create_group(group_name: String) -> Int {
-        let group_num = self.create_cue(cue_type: CueType.GROUP)
-        self.set_cue_name(name: group_name)
-        return group_num
-    }
-    
-    /**
-     Creates a midi cue with the given pre-wait time in the given workspace.
-     
-     - Parameters:
-     - pre_wait: Pre-wait time for the cue in seconds.
-     - Returns: The index at which the cue was added. (For example, first added cue for the given call will be 0).
-     */
-    func create_timed_cue(pre_wait: Float) -> Int {
-        let cue_number = self.create_cue(cue_type: config.cue_type)
-        self.set_cue_prewait(time_stamp: pre_wait)
-        return cue_number
-    }
-    
-    /**
      For the given patch value, set it as the value for the cue number parameter of the selected network cue.
      
      - Parameters:
-     - patch_value: Value to be set as a cue number of the network cue.
+        - patch_value: Value to be set as a cue number of the network cue.
      */
     func set_network_cue_number_patch(patch_value: String) {
         let method_call = String(format: SET_CUE_PARAMETER, CUE_NUMBER_NETWORK_KEY)
@@ -184,7 +166,7 @@ class Client {
      Also renames the cue into `LX patch_value`
      
      - Parameters:
-     - patch_value: Value to be set as a cue number of the MIDI cue.
+        - patch_value: Value to be set as a cue number of the MIDI cue.
      */
     func set_midi_cue_number_patch_alternative(patch_value: String) {
         let method_call = String(format: SET_CUE_PARAMETER, CUE_NUMBER_MIDI_KEY)
