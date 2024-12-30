@@ -127,7 +127,25 @@ struct ParserTests {
         #expect(parser.post_sanitize_cell(cell: "") == "")
     }
     
-    
+    @Test func testVerifyFloatString() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+        
+        #expect(parser.verify_float_string(time_cell: "304.5") == CueTime(asString: "05:04.50", value: 304.5))
+        
+        #expect(parser.verify_float_string(time_cell: "invalid") == nil)
+        
+        #expect(parser.verify_float_string(time_cell: "0") == CueTime(asString: "00:00.00", value: 0))
+        
+        #expect(parser.verify_float_string(time_cell: "~454.4") == nil)
+        
+        #expect(parser.verify_float_string(time_cell: "3:04.5") == nil)
+        
+        #expect(parser.verify_float_string(time_cell: "60.01") == CueTime(asString: "01:00.01", value: 60.01))
+        
+        #expect(parser.verify_float_string(time_cell: "-120") == CueTime(asString: "00:00.00", value: 0))
+        
+        #expect(parser.verify_float_string(time_cell: "-0") == CueTime(asString: "00:00.00", value: 0.0))
+    }
     
     @Test func testVerifyTimeString() throws {
         let time_stamp1 = "1:01.34"
@@ -141,7 +159,7 @@ struct ParserTests {
         let time_stamp8 = "7-24.00"
         let time_stamp9 = "07-24.00"
         let time_stamp10 = "07;24.00"
-        let time_stamp11 = "00:7:24"
+        let time_stamp11 = "7'24"
         
         let time_stamp12 = "2:31, 2:32, 2:34"
         let time_stamp13 = "02:31 - 02:32"
