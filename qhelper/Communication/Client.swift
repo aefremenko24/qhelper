@@ -44,9 +44,7 @@ class Client {
         do {
             try self.oscClient.send(msg, to: self.config.host, port: UInt16(self.config.send_port)!)
             
-            if command_trace != nil {
-                command_trace?.append((command, args))
-            }
+            command_trace?.append((command, args))
         } catch let err {
             print("error: \(err)")
         }
@@ -61,17 +59,17 @@ class Client {
         
         set_cue_number(cue_number: cue.number)
         if cue.pre_wait_time != nil {
-            set_cue_prewait(time_stamp: cue.pre_wait_time!)
+            self.set_cue_prewait(time_stamp: cue.pre_wait_time!)
         }
         if cue.name != nil {
-            set_cue_name(name: cue.name!)
+            self.set_cue_name(name: cue.name!)
         }
         if cue.file_path != nil {
             self.attach_file_target(file_path: cue.file_path!)
         }
         if cue.is_lx_cue {
             Thread.sleep(forTimeInterval: 0.04)
-            make_lx_cue(cue_number: cue.number)
+            self.make_lx_cue(cue_number: cue.number)
         }
     }
     
@@ -163,21 +161,6 @@ class Client {
     
     /**
      For the given patch value, set it as the value for the cue number parameter of the selected MIDI cue.
-     Also renames the cue into `LX patch_value`
-     
-     - Parameters:
-        - patch_value: Value to be set as a cue number of the MIDI cue.
-     */
-    func set_midi_cue_number_patch_alternative(patch_value: String) {
-        let method_call = String(format: SET_CUE_PARAMETER, CUE_NUMBER_MIDI_KEY)
-        let args = [patch_value]
-        self.send_command(command: method_call, args: args)
-        
-        self.set_cue_name(name: "LX \(patch_value)")
-    }
-    
-    /**
-     For the given patch value, set it as the value for the cue number parameter of the selected MIDI cue.
      */
     func set_midi_cue_number_patch() {
         if LX_MIDI_SCRIPT != nil {
@@ -215,20 +198,6 @@ class Client {
     }
     
     /**
-     Creates an audio cue with the specified audio file attached to it.
-     
-     - Parameters:
-     - file_path: File path and name (see attach_file_target for notes on supported inputs.)
-     - Returns: The index at which the cue was added. (For example, first added cue for the given call will be 0).
-     */
-    func create_audio_cue(file_path: String) -> Int {
-        let cue_number = self.create_cue(cue_type: CueType.AUDIO)
-        self.attach_file_target(file_path: file_path)
-        self.set_cue_number(cue_number: "")
-        return cue_number
-    }
-    
-    /**
      Sets the number of the selected cue to the given number.
      
      - Parameters:
@@ -238,21 +207,6 @@ class Client {
         let method_call = SET_CUE_NUMBER
         let args = [cue_number]
         self.send_command(command: method_call, args: args)
-    }
-    
-    /**
-     Creates a cue of a given type with a given number (meant to be used as a blackout, non-timed cue.
-     
-     - Parameters:
-     - cue_type: Cue type (see CueType enum in Utils.swift).
-     - cue_number: Optional, desired number of the cue as a string.
-     */
-    func create_blackout_cue(cue_type: CueType, cue_num: Int? = nil) -> Int {
-        let cue_number = self.create_cue(cue_type: cue_type)
-        if cue_num != nil {
-            self.set_cue_number(cue_number: String(cue_num!))
-        }
-        return cue_number
     }
     
     /**
@@ -270,23 +224,6 @@ class Client {
             self.send_command(command: method_call, args: args)
             
             self.move_cue_children(cue: child)
-        }
-        self.send_command(command: String(format: COLLAPSE_GROUP, cue.unique_id!))
-    }
-    
-    /**
-     Sends the commands to move all children of the given cue into the cue.
-     Does not move children of all children cues into their parent cues reccursively.
-     
-     - Parameter cue: Parent cue to process children of.
-     */
-    func move_cue_children_shallow(cue: Cue) {
-        if cue.children.isEmpty || cue.unique_id == nil { return }
-        for (child_index, child) in cue.children.enumerated() {
-            if child.unique_id == nil { continue }
-            let method_call = String(format: MOVE_CUE, self.config.workspace, child.unique_id!)
-            let args: Array<any OSCValue> = [child_index, cue.unique_id!]
-            self.send_command(command: method_call, args: args)
         }
         self.send_command(command: String(format: COLLAPSE_GROUP, cue.unique_id!))
     }
