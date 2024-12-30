@@ -1,0 +1,36 @@
+{
+  "configurations" : [
+    {
+      "id" : "6C071412-4063-4E9D-B113-F024346D6979",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "skippedTests" : {
+        "suites" : [
+          {
+            "name" : "ParserTests"
+          }
+        ],
+        "xctestClasses" : [
+          {
+            "name" : "UtilsTests"
+          }
+        ]
+      },
+      "target" : {
+        "containerPath" : "container:qhelper.xcodeproj",
+        "identifier" : "41F5C2D82CEBA03D00721504",
+        "name" : "qhelperTests"
+      }
+    }
+  ],
+  "version" : 2
+}

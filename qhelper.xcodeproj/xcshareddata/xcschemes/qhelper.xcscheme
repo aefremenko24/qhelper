@@ -30,7 +30,13 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:qhelper/Unit Tests.xctestplan"
+            reference = "container:qhelper/Unit Tests.xctestplan">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:IntegrationTests.xctestplan">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:AllTests.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>

@@ -1,0 +1,39 @@
+{
+  "configurations" : [
+    {
+      "id" : "3A264A80-C843-473E-8A87-104E30CF26FD",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "language" : "en",
+    "region" : "US",
+    "uiTestingScreenshotsLifetime" : "keepNever"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "skippedTests" : {
+        "suites" : [
+          {
+            "name" : "IntegrationParserTests"
+          }
+        ],
+        "xctestClasses" : [
+          {
+            "name" : "qhelperTests"
+          }
+        ]
+      },
+      "target" : {
+        "containerPath" : "container:qhelper.xcodeproj",
+        "identifier" : "41F5C2D82CEBA03D00721504",
+        "name" : "qhelperTests"
+      }
+    }
+  ],
+  "version" : 2
+}

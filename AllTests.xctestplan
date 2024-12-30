@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "3A264A80-C843-473E-8A87-104E30CF26FD",
+      "id" : "FDC8F8B0-2C55-4A96-B1A8-01DFCC5A15A3",
       "name" : "Configuration 1",
       "options" : {
 
@@ -9,22 +9,21 @@
     }
   ],
   "defaultOptions" : {
-    "language" : "en",
-    "region" : "US",
-    "uiTestingScreenshotsLifetime" : "keepNever"
+    "testTimeoutsEnabled" : true
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
-      "skippedTests" : [
-        "qhelperTests",
-        "qhelperTests\/testExample()",
-        "qhelperTests\/testPerformanceExample()"
-      ],
       "target" : {
         "containerPath" : "container:qhelper.xcodeproj",
         "identifier" : "41F5C2D82CEBA03D00721504",
         "name" : "qhelperTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:qhelper.xcodeproj",
+        "identifier" : "41F5C2E22CEBA03D00721504",
+        "name" : "qhelperUITests"
       }
     }
   ],

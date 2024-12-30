@@ -11,6 +11,9 @@
 		410657E32D1A762B0021F24E /* OSCKitCore in Frameworks */ = {isa = PBXBuildFile; productRef = 410657E22D1A762B0021F24E /* OSCKitCore */; };
 		41102E602CF2F3140040E980 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41102E5F2CF2F3140040E980 /* SystemConfiguration.framework */; };
 		4158601D2D1A777400B8FD7E /* CoreXLSX in Frameworks */ = {isa = PBXBuildFile; productRef = 4158601C2D1A777400B8FD7E /* CoreXLSX */; };
+		419893EB2D2318690053B7EE /* Unit Tests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 419893E62D2318690053B7EE /* Unit Tests.xctestplan */; };
+		4198941B2D231AD60053B7EE /* IntegrationTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 4198941A2D231AD60053B7EE /* IntegrationTests.xctestplan */; };
+		4198941D2D231AF70053B7EE /* AllTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 4198941C2D231AF70053B7EE /* AllTests.xctestplan */; };
 		41FEF6F42D036FE100DCAD4A /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 41FEF6F32D036FE100DCAD4A /* README.md */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +36,9 @@
 
 /* Begin PBXFileReference section */
 		41102E5F2CF2F3140040E980 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		419893E62D2318690053B7EE /* Unit Tests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Unit Tests.xctestplan"; sourceTree = "<group>"; };
+		4198941A2D231AD60053B7EE /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegrationTests.xctestplan; sourceTree = "<group>"; };
+		4198941C2D231AF70053B7EE /* AllTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AllTests.xctestplan; sourceTree = "<group>"; };
 		41F5C2C82CEBA03C00721504 /* qhelper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = qhelper.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		41F5C2D92CEBA03D00721504 /* qhelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = qhelperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		41F5C2E32CEBA03D00721504 /* qhelperUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = qhelperUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -111,6 +117,9 @@
 		41F5C2BF2CEBA03C00721504 = {
 			isa = PBXGroup;
 			children = (
+				419893E62D2318690053B7EE /* Unit Tests.xctestplan */,
+				4198941C2D231AF70053B7EE /* AllTests.xctestplan */,
+				4198941A2D231AD60053B7EE /* IntegrationTests.xctestplan */,
 				41FEF6F32D036FE100DCAD4A /* README.md */,
 				41F5C2CA2CEBA03C00721504 /* qhelper */,
 				41F5C2DC2CEBA03D00721504 /* qhelperTests */,
@@ -257,7 +266,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4198941B2D231AD60053B7EE /* IntegrationTests.xctestplan in Resources */,
+				419893EB2D2318690053B7EE /* Unit Tests.xctestplan in Resources */,
 				41FEF6F42D036FE100DCAD4A /* README.md in Resources */,
+				4198941D2D231AF70053B7EE /* AllTests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
