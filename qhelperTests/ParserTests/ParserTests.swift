@@ -6,43 +6,155 @@
 //
 
 import Testing
+import Foundation
+import CoreXLSX
 @testable import qhelper
 
 struct ParserTests {
     
-    let workbook1 = "/Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Samples/Aaroh Lighting Cues Form-Fenway.xlsx"
-    let workbook2 = "/Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Samples/Amelia and Emily_Too Sweet.xlsx"
-    let workbook3 = "/Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Samples/Battle Of The ASO's Lighting Cues Form (NASO).xlsx"
-    let workbook4 = "/Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Samples/Candice Cues Fall 2024.xlsx"
-    let workbook5 = "/Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Samples/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx"
-    let workbook6 = "/Users/lemanappazov/Desktop/Coding/Swift/qhelper/qhelper/Samples/Tyler Cues Fall 23.xlsx"
+    let NICKI_SHOW_FILE: URL = URL(fileURLWithPath: "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/ParserTests/9. Sarah - The Nicki Show.xlsx")
     
-    let time_stamp1 = "1:01.34"
-    let time_stamp2 = "61.34"
-    let time_stamp3 = "1-01.34"
-    let time_stamp4 = "00:01:01.34"
+    let NUMALHAR_FILE: URL = URL(fileURLWithPath: "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/ParserTests/NUMalhar Lighting Cues D4ME 2024.xlsx")
     
-    let time_stamp5 = "07:24"
-    let time_stamp6 = "07:24.00"
-    let time_stamp7 = "7-24"
-    let time_stamp8 = "7-24.00"
-    let time_stamp9 = "07-24.00"
-    let time_stamp10 = "07;24.00"
-    let time_stamp11 = "00:7:24"
+    @Test func testSetSharedStrings() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+        
+        #expect(parser.shared_strings == nil)
+        
+        try parser.set_shared_strings()
+        
+        #expect(parser.shared_strings != nil)
+        #expect(parser.shared_strings!.items.count > 0)
+    }
     
-    let time_stamp12 = "2:31, 2:32, 2:34"
-    let time_stamp13 = "02:31 - 02:32"
-    let time_stamp14 = "2-31 - 2-32"
+    @Test func testExtractWorksheets() throws {
+        // NICKI SHOW
+        let parser1 = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+        
+        let worksheets1 = try parser1.extract_worksheets(excel_file:  parser1.file_path)
+        
+        try #require(worksheets1.count == 1)
+        #expect(worksheets1[0].name == "Lighting Cue Template")
+        
+        // NUMALHAR
+        let parser2 = Parser(file_path: NUMALHAR_FILE.path, file_name: NUMALHAR_FILE.lastPathComponent)
+        
+        let worksheets2 = try parser2.extract_worksheets(excel_file:  parser2.file_path)
+        
+        try #require(worksheets2.count == 2)
+        #expect(worksheets2[0].name == "Revised Cues")
+        #expect(worksheets2[1].name == "Blackman")
+    }
     
-    let time_stamp15 = "00:30:00"
+    @Test func testFindCell() throws {
+        let parser1 = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+        
+        let worksheets1 = try parser1.extract_worksheets(excel_file:  parser1.file_path)
+        
+        try #require(worksheets1.count == 1)
+        
+        let time_cell_1 = parser1.find_cell(worksheet: worksheets1[0].worksheet, value: "Time *Example MM:SS:MS*")
+        
+        #expect(time_cell_1.count == 1)
+        #expect(time_cell_1[0].reference.row == 6)
+        #expect(time_cell_1[0].reference.column.value == "C")
+        
+        let time_cell_2 = parser1.find_cell(worksheet: worksheets1[0].worksheet, value: "full")
+        
+        #expect(time_cell_2.count == 2)
+        #expect(time_cell_2[0].reference.row == 15)
+        #expect(time_cell_2[0].reference.column.value == "D")
+        #expect(time_cell_2[1].reference.row == 15)
+        #expect(time_cell_2[1].reference.column.value == "E")
+        
+        let time_cell_3 = parser1.find_cell(worksheet: worksheets1[0].worksheet, value: "NON_EXISTENT_CELL")
+        
+        #expect(time_cell_3.count == 0)
+    }
+    
+    @Test func testFindFirstCellOccurences() throws {
+        let parser1 = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+        
+        let worksheets1 = try parser1.extract_worksheets(excel_file:  parser1.file_path)
+        
+        try #require(worksheets1.count == 1)
+        
+        let cell_search_1 = ["Cue Number", "Fade Time", "NU Event Management"]
+        
+        let time_cells_1 = parser1.find_first_cell_occurrences(worksheet: worksheets1[0].worksheet, labels: cell_search_1)
+        
+        #expect(time_cells_1.label == "Cue Number")
+        #expect(time_cells_1.cells.count == 1)
+        #expect(time_cells_1.cells == parser1.find_cell(worksheet: worksheets1[0].worksheet, value: "Cue Number"))
+        
+        let cell_search_2 = ["NON", "EXISTENT", "LABELS"]
+        
+        let time_cells_2 = parser1.find_first_cell_occurrences(worksheet: worksheets1[0].worksheet, labels: cell_search_2)
+        
+        #expect(time_cells_2.label == nil)
+        #expect(time_cells_2.cells == [])
+        
+        let cell_search_3 = ["QLAB TIMES", "Timings (Seconds)", "Time *Example MM:SS:MS*"]
+        
+        let time_cells_3 = parser1.find_first_cell_occurrences(worksheet: worksheets1[0].worksheet, labels: cell_search_3)
+        
+        #expect(time_cells_3.label == "Time *Example MM:SS:MS*")
+        #expect(time_cells_3.cells.count == 1)
+        #expect(time_cells_3.cells == parser1.find_cell(worksheet: worksheets1[0].worksheet, value: "Time *Example MM:SS:MS*"))
+    }
+    
+    
+    @Test func testPreSanitizeCell() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+        
+        #expect(parser.pre_sanitize_cell(cell: "(3:04)") == "3:04")
+        #expect(parser.pre_sanitize_cell(cell: "3:04.03 - 04:05") == "3:04.03")
+        #expect(parser.pre_sanitize_cell(cell: "2:03,2:04, 2:05") == "2:03")
+        #expect(parser.pre_sanitize_cell(cell: "") == "")
+        #expect(parser.pre_sanitize_cell(cell: " ") == "")
+        #expect(parser.pre_sanitize_cell(cell: "2:03 \n") == "2:03")
+        #expect(parser.pre_sanitize_cell(cell: "2:03") == "2:03")
+    }
+    
+    @Test func testPostSanitizeCell() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+        
+        #expect(parser.post_sanitize_cell(cell: "3:04") == "3:04")
+        #expect(parser.post_sanitize_cell(cell: "3-04.05") == "3:04.05")
+        #expect(parser.post_sanitize_cell(cell: "3 04 05") == "3:04:05")
+        #expect(parser.post_sanitize_cell(cell: "3+04.05") == "3:04.05")
+        #expect(parser.post_sanitize_cell(cell: " ") == ":")
+        #expect(parser.post_sanitize_cell(cell: "") == "")
+    }
+    
+    
     
     @Test func testVerifyTimeString() throws {
+        let time_stamp1 = "1:01.34"
+        let time_stamp2 = "61.34"
+        let time_stamp3 = "1-01.34"
+        let time_stamp4 = "00:01:01.34"
+        
+        let time_stamp5 = "07:24"
+        let time_stamp6 = "07:24.00"
+        let time_stamp7 = "7-24"
+        let time_stamp8 = "7-24.00"
+        let time_stamp9 = "07-24.00"
+        let time_stamp10 = "07;24.00"
+        let time_stamp11 = "00:7:24"
+        
+        let time_stamp12 = "2:31, 2:32, 2:34"
+        let time_stamp13 = "02:31 - 02:32"
+        let time_stamp14 = "2-31 - 2-32"
+        
+        let time_stamp15 = "00:30:00"
+        
         let time_stamps1 = [time_stamp1, time_stamp2, time_stamp3, time_stamp4]
         let time_stamps2 = [time_stamp5, time_stamp6, time_stamp7, time_stamp8, time_stamp9, time_stamp10, time_stamp11]
         let time_stamps3 = [time_stamp12, time_stamp13, time_stamp14]
         let time_stamps4 = [time_stamp15]
         
-        let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
         for time_stamp in time_stamps1 {
             print("Testing time stamp \(time_stamp)")
             #expect(parser.verify_time_string(time_string: time_stamp)?.value == 61.34)
@@ -64,358 +176,4 @@ struct ParserTests {
             #expect(parser.verify_time_string(time_string: time_stamp)?.asString == "00:30.00")
         }
     }
-
-    @Test func testAarohFenwayGeneral() throws {
-        let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        #expect(cue_tables.count == 6)
-    }
-    
-    @Test func testAarohFenwaySojaSoja() throws {
-        let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table_1 = cue_tables[0]
-        #expect(cue_table_1.name == "Soja Soja")
-        #expect(cue_table_1.times.count == 18)
-        #expect(cue_table_1.times[0].value == 0.0)
-        #expect(cue_table_1.times[0].asString == "00:00.00")
-        #expect(cue_table_1.times[1].value == 30.0)
-        #expect(cue_table_1.times[1].asString == "00:30.00")
-        #expect(cue_table_1.times[2].value == 60.0)
-        #expect(cue_table_1.times[2].asString == "01:00.00")
-        #expect(cue_table_1.times[3].value == 65.0)
-        #expect(cue_table_1.times[3].asString == "01:05.00")
-        #expect(cue_table_1.times[4].value == 70.0)
-        #expect(cue_table_1.times[4].asString == "01:10.00")
-        #expect(cue_table_1.times[5].value == 80.0)
-        #expect(cue_table_1.times[5].asString == "01:20.00")
-        #expect(cue_table_1.times[6].value == 81.0)
-        #expect(cue_table_1.times[6].asString == "01:21.00")
-        #expect(cue_table_1.times[7].value == 82.0)
-        #expect(cue_table_1.times[7].asString == "01:22.00")
-        #expect(cue_table_1.times[8].value == 83.0)
-        #expect(cue_table_1.times[8].asString == "01:23.00")
-        #expect(cue_table_1.times[9].value == 110.0)
-        #expect(cue_table_1.times[9].asString == "01:50.00")
-        #expect(cue_table_1.times[10].value == 150.0)
-        #expect(cue_table_1.times[10].asString == "02:30.00")
-        #expect(cue_table_1.times[11].value == 210.0)
-        #expect(cue_table_1.times[11].asString == "03:30.00")
-        #expect(cue_table_1.times[12].value == 220.0)
-        #expect(cue_table_1.times[12].asString == "03:40.00")
-        #expect(cue_table_1.times[13].value == 221.0)
-        #expect(cue_table_1.times[13].asString == "03:41.00")
-        #expect(cue_table_1.times[14].value == 222.0)
-        #expect(cue_table_1.times[14].asString == "03:42.00")
-        #expect(cue_table_1.times[15].value == 223.0)
-        #expect(cue_table_1.times[15].asString == "03:43.00")
-        #expect(cue_table_1.times[16].value == 240.0)
-        #expect(cue_table_1.times[16].asString == "04:00.00")
-        #expect(cue_table_1.times[17].value == 300.0)
-        #expect(cue_table_1.times[17].asString == "05:00.00")
-    }
-    
-    @Test func testAarohFenwayMalhar1() throws {
-        let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table_2 = cue_tables[1]
-        #expect(cue_table_2.name == "Malhar 1")
-        #expect(cue_table_2.times.count == 2)
-        #expect(cue_table_2.times[0].value == 0.0)
-        #expect(cue_table_2.times[0].asString == "00:00.00")
-        #expect(cue_table_2.times[1].value == 80.0)
-        #expect(cue_table_2.times[1].asString == "01:20.00")
-    }
-    
-    @Test func testAarohFenwayMalhar2() throws {
-        let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table_3 = cue_tables[2]
-        #expect(cue_table_3.name == "Malhar 2")
-        #expect(cue_table_3.times.count == 8)
-        #expect(cue_table_3.times[0].value == 0.0)
-        #expect(cue_table_3.times[0].asString == "00:00.00")
-        #expect(cue_table_3.times[1].value == 19.0)
-        #expect(cue_table_3.times[1].asString == "00:19.00")
-        #expect(cue_table_3.times[2].value == 79.0)
-        #expect(cue_table_3.times[2].asString == "01:19.00")
-        #expect(cue_table_3.times[3].value == 107.0)
-        #expect(cue_table_3.times[3].asString == "01:47.00")
-        #expect(cue_table_3.times[4].value == 135.0)
-        #expect(cue_table_3.times[4].asString == "02:15.00")
-        #expect(cue_table_3.times[5].value == 147.0)
-        #expect(cue_table_3.times[5].asString == "02:27.00")
-        #expect(cue_table_3.times[6].value == 187.0)
-        #expect(cue_table_3.times[6].asString == "03:07.00")
-        #expect(cue_table_3.times[7].value == 199.0)
-        #expect(cue_table_3.times[7].asString == "03:19.00")
-    }
-    
-    @Test func testAarohFenwayNaad() throws {
-        let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table_4 = cue_tables[3]
-        #expect(cue_table_4.name == "NAAD")
-        #expect(cue_table_4.times.count == 11)
-        #expect(cue_table_4.times[0].value == 0.0)
-        #expect(cue_table_4.times[0].asString == "00:00.00")
-        #expect(cue_table_4.times[1].value == 45.0)
-        #expect(cue_table_4.times[1].asString == "00:45.00")
-        #expect(cue_table_4.times[2].value == 60.0)
-        #expect(cue_table_4.times[2].asString == "01:00.00")
-        #expect(cue_table_4.times[3].value == 80.0)
-        #expect(cue_table_4.times[3].asString == "01:20.00")
-        #expect(cue_table_4.times[4].value == 120.0)
-        #expect(cue_table_4.times[4].asString == "02:00.00")
-        #expect(cue_table_4.times[5].value == 145.0)
-        #expect(cue_table_4.times[5].asString == "02:25.00")
-        #expect(cue_table_4.times[6].value == 0.0)
-        #expect(cue_table_4.times[6].asString == "00:00.00")
-        #expect(cue_table_4.times[7].value == 42.0)
-        #expect(cue_table_4.times[7].asString == "00:42.00")
-        #expect(cue_table_4.times[8].value == 60.0)
-        #expect(cue_table_4.times[8].asString == "01:00.00")
-        #expect(cue_table_4.times[9].value == 90.0)
-        #expect(cue_table_4.times[9].asString == "01:30.00")
-        #expect(cue_table_4.times[10].value == 120.0)
-        #expect(cue_table_4.times[10].asString == "02:00.00")
-    }
-    
-    @Test func testAarohFenwayJiyaJale() throws {
-        let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table_5 = cue_tables[4]
-        #expect(cue_table_5.name == "Jiya Jale")
-        #expect(cue_table_5.times.count == 10)
-        #expect(cue_table_5.times[0].value == 0.0)
-        #expect(cue_table_5.times[0].asString == "00:00.00")
-        #expect(cue_table_5.times[1].value == 30.0)
-        #expect(cue_table_5.times[1].asString == "00:30.00")
-        #expect(cue_table_5.times[2].value == 60.0)
-        #expect(cue_table_5.times[2].asString == "01:00.00")
-        #expect(cue_table_5.times[3].value == 105.0)
-        #expect(cue_table_5.times[3].asString == "01:45.00")
-        #expect(cue_table_5.times[4].value == 150.0)
-        #expect(cue_table_5.times[4].asString == "02:30.00")
-        #expect(cue_table_5.times[5].value == 195.0)
-        #expect(cue_table_5.times[5].asString == "03:15.00")
-        #expect(cue_table_5.times[6].value == 240.0)
-        #expect(cue_table_5.times[6].asString == "04:00.00")
-        #expect(cue_table_5.times[7].value == 285.0)
-        #expect(cue_table_5.times[7].asString == "04:45.00")
-        #expect(cue_table_5.times[8].value == 315.0)
-        #expect(cue_table_5.times[8].asString == "05:15.00")
-        #expect(cue_table_5.times[9].value == 330.0)
-        #expect(cue_table_5.times[9].asString == "05:30.00")
-    }
-    
-    @Test func testAarohFenwayAasaKooda() throws {
-        let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table_6 = cue_tables[5]
-        #expect(cue_table_6.name == "Aasa kooda")
-        #expect(cue_table_6.times.count == 10)
-        #expect(cue_table_6.times[0].value == 0.0)
-        #expect(cue_table_6.times[0].asString == "00:00.00")
-        #expect(cue_table_6.times[1].value == 45.0)
-        #expect(cue_table_6.times[1].asString == "00:45.00")
-        #expect(cue_table_6.times[2].value == 90.0)
-        #expect(cue_table_6.times[2].asString == "01:30.00")
-        #expect(cue_table_6.times[3].value == 120.0)
-        #expect(cue_table_6.times[3].asString == "02:00.00")
-        #expect(cue_table_6.times[4].value == 165.0)
-        #expect(cue_table_6.times[4].asString == "02:45.00")
-        #expect(cue_table_6.times[5].value == 195.0)
-        #expect(cue_table_6.times[5].asString == "03:15.00")
-        #expect(cue_table_6.times[6].value == 225.0)
-        #expect(cue_table_6.times[6].asString == "03:45.00")
-        #expect(cue_table_6.times[7].value == 255.0)
-        #expect(cue_table_6.times[7].asString == "04:15.00")
-        #expect(cue_table_6.times[8].value == 285.0)
-        #expect(cue_table_6.times[8].asString == "04:45.00")
-        #expect(cue_table_6.times[9].value == 300.0)
-        #expect(cue_table_6.times[9].asString == "05:00.00")
-    }
-    
-    @Test func testAmeliaAndEmilyGeneral() throws {
-        let parser = Parser(file_path: workbook2, file_name: String(workbook2.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        #expect(cue_tables.count == 1)
-    }
-    
-    @Test func testAmeliaAndEmily() throws {
-        let parser = Parser(file_path: workbook2, file_name: String(workbook2.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table = cue_tables[0]
-        #expect(cue_table.name == "Amelia and Emily_Too Sweet")
-        #expect(cue_table.times.count == 12)
-        #expect(cue_table.times[0].value == 0.0)
-        #expect(cue_table.times[0].asString == "00:00.00")
-        #expect(cue_table.times[1].value == 16.95)
-        #expect(cue_table.times[1].asString == "00:16.95")
-        #expect(cue_table.times[2].value == 25.04)
-        #expect(cue_table.times[2].asString == "00:25.04")
-        #expect(cue_table.times[3].value == 64.0)
-        #expect(cue_table.times[3].asString == "01:04.00")
-        #expect(cue_table.times[4].value == 94.86)
-        #expect(cue_table.times[4].asString == "01:34.86")
-        #expect(cue_table.times[5].value == 110.54)
-        #expect(cue_table.times[5].asString == "01:50.54")
-        #expect(cue_table.times[6].value == 114.59)
-        #expect(cue_table.times[6].asString == "01:54.59")
-        #expect(cue_table.times[7].value == 146.46)
-        #expect(cue_table.times[7].asString == "02:26.46")
-        #expect(cue_table.times[8].value == 162.40)
-        #expect(cue_table.times[8].asString == "02:42.40")
-        #expect(cue_table.times[9].value == 196.29)
-        #expect(cue_table.times[9].asString == "03:16.29")
-        #expect(cue_table.times[10].value == 227.66)
-        #expect(cue_table.times[10].asString == "03:47.66")
-        #expect(cue_table.times[11].value == 246.38)
-        #expect(cue_table.times[11].asString == "04:06.38")
-    }
-    
-    @Test func testBattleOfTheASOSGeneral() throws {
-        let parser = Parser(file_path: workbook3, file_name: String(workbook3.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        #expect(cue_tables.count == 8)
-        for cue_table in cue_tables {
-            print(cue_table.name)
-        }
-    }
-    
-    @Test func testBattleOfTheASOSBU() throws {
-        let parser = Parser(file_path: workbook3, file_name: String(workbook3.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table = cue_tables[0]
-        #expect(cue_table.name == "Boston University")
-        #expect(cue_table.times.count == 6)
-        #expect(cue_table.times[0].value == 0.0)
-        #expect(cue_table.times[0].asString == "00:00.00")
-        #expect(cue_table.times[1].value == 27.0)
-        #expect(cue_table.times[1].asString == "00:27.00")
-        #expect(cue_table.times[2].value == 89.0)
-        #expect(cue_table.times[2].asString == "01:29.00")
-        #expect(cue_table.times[3].value == 173.0)
-        #expect(cue_table.times[3].asString == "02:53.00")
-        #expect(cue_table.times[4].value == 225.0)
-        #expect(cue_table.times[4].asString == "03:45.00")
-        #expect(cue_table.times[5].value == 230.0)
-        #expect(cue_table.times[5].asString == "03:50.00")
-    }
-    
-    @Test func testBattleOfTheASOSTufts() throws {
-        let parser = Parser(file_path: workbook3, file_name: String(workbook3.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table = cue_tables[4]
-        #expect(cue_table.name == "COCOA (Tufts)")
-        #expect(cue_table.times.count == 7)
-        #expect(cue_table.times[0].value == 10.0)
-        #expect(cue_table.times[0].asString == "00:10.00")
-        #expect(cue_table.times[1].value == 30.0)
-        #expect(cue_table.times[1].asString == "00:30.00")
-        #expect(cue_table.times[2].value == 98.0)
-        #expect(cue_table.times[2].asString == "01:38.00")
-        #expect(cue_table.times[3].value == 161.0)
-        #expect(cue_table.times[3].asString == "02:41.00")
-        #expect(cue_table.times[4].value == 230.0)
-        #expect(cue_table.times[4].asString == "03:50.00")
-        #expect(cue_table.times[5].value == 366.0)
-        #expect(cue_table.times[5].asString == "06:06.00")
-        #expect(cue_table.times[6].value == 412.0)
-        #expect(cue_table.times[6].asString == "06:52.00")
-    }
-    
-    @Test func testCandiceCuesGeneral() throws {
-        let parser = Parser(file_path: workbook4, file_name: String(workbook4.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        #expect(cue_tables.count == 3)
-    }
-    
-    @Test func testSanskritiFashionGeneral() throws {
-        let parser = Parser(file_path: workbook5, file_name: String(workbook5.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        #expect(cue_tables.count == 1)
-    }
-    
-    @Test func testSanskritiFashion() throws {
-        let parser = Parser(file_path: workbook5, file_name: String(workbook5.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        
-        let cue_table = cue_tables[0]
-        #expect(cue_table.name == "FASHION TEAM")
-        #expect(cue_table.times.count != 19)
-        #expect(cue_table.times.count == 16)
-        
-        #expect(cue_table.times[0].value == 0.0)
-        #expect(cue_table.times[0].asString == "00:00.00")
-        #expect(cue_table.times[1].value == 11.57)
-        #expect(cue_table.times[1].asString == "00:11.57")
-        #expect(cue_table.times[2].value == 17.0)
-        #expect(cue_table.times[2].asString == "00:17.00")
-        #expect(cue_table.times[3].value == 39.22)
-        #expect(cue_table.times[3].asString == "00:39.22")
-        #expect(cue_table.times[4].value == 57.99)
-        #expect(cue_table.times[4].asString == "00:57.99")
-        #expect(cue_table.times[5].value == 75.01)
-        #expect(cue_table.times[5].asString == "01:15.01")
-        #expect(cue_table.times[6].value == 450.0)
-        #expect(cue_table.times[6].asString == "07:30.00")
-        #expect(cue_table.times[7].value == 480.0)
-        #expect(cue_table.times[7].asString == "08:00.00")
-        #expect(cue_table.times[8].value == 490.0)
-        #expect(cue_table.times[8].asString == "08:10.00")
-        #expect(cue_table.times[9].value == 500.23)
-        #expect(cue_table.times[9].asString == "08:20.23")
-        #expect(cue_table.times[10].value == 574.22)
-        #expect(cue_table.times[10].asString == "09:34.22")
-        #expect(cue_table.times[11].value == 648.21)
-        #expect(cue_table.times[11].asString == "10:48.21")
-        #expect(cue_table.times[12].value != 751.99)
-        #expect(cue_table.times[12].asString != "11:91.99")
-        #expect(cue_table.times[12].value == 842.10)
-        #expect(cue_table.times[12].asString == "14:02.10")
-        #expect(cue_table.times[13].value != 1223.29)
-        #expect(cue_table.times[13].asString != "19:83.29")
-        #expect(cue_table.times[13].value == 1224.03)
-        #expect(cue_table.times[13].asString == "20:24.03")
-        #expect(cue_table.times[14].value == 1239.03)
-        #expect(cue_table.times[14].asString == "20:39.03")
-        #expect(cue_table.times[15].value != 1341.03)
-        #expect(cue_table.times[15].asString != "21:81.03")
-        #expect(cue_table.times[15].value == 1691.03)
-        #expect(cue_table.times[15].asString == "28:11.03")
-    }
-    
-    @Test func testTylerCuesGeneral() throws {
-        let parser = Parser(file_path: workbook6, file_name: String(workbook6.split(separator: "/").last!))
-        try parser.set_shared_strings()
-        let cue_tables = try parser.parse_excel_file()
-        #expect(cue_tables.count == 4)
-    }
-
 }

@@ -187,7 +187,7 @@ let PADDING: CGFloat = 30
 
 let CUE_TIME_LABELS = ["Cue Start Time", "QLAB TIMING", "Exact Time", "Time Stamp", "Time *Example MM:SS:MS*"]
 let EXAMPLE_LABELS = ["EXAMPLE FORM", "EXAMPLE", "SEE EXAMPLE BELOW"]
-let EMPTY_TIME_CELL_TOLERANCE: Int = 4
+let EMPTY_TIME_CELL_TOLERANCE: Int = 3
 
 // Default host used to connect to QLab workspaces
 let DEFAULT_HOST = "localhost"

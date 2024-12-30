@@ -34,6 +34,7 @@ class Parser {
     
     /**
      Finds the rows and columns of all cells with the value equal to the specified value.
+     `self.set_shared_strings` should be called before this function.
 
      - Parameters:
         - find_cell: Excel worksheet file to search in.
@@ -43,30 +44,19 @@ class Parser {
     func find_cell(worksheet: Worksheet, value: String) -> [Cell] {
         var found: [Cell] = []
         
-        for row in worksheet.data?.rows ?? [] {
-            for c in row.cells {
-                if c.stringValue(shared_strings!) == value {
-                    found.append(c)
-                }
+        if self.shared_strings == nil {
+            do {
+                try self.set_shared_strings()
+            } catch {
+                print(error)
             }
         }
-        return found
-    }
-    
-    /**
-     Finds the rows and columns of all cells with the value containing the specified value.
-
-     - Parameters:
-        - find_cell: Excel worksheet file to search in.
-        - value: Value to search for.
-     - Returns: Cells with the value containing the given value.
-     */
-    func find_cell_regex(worksheet: Worksheet, regex: String) -> [Cell] {
-        var found: [Cell] = []
         
         for row in worksheet.data?.rows ?? [] {
             for c in row.cells {
-                if c.stringValue(shared_strings!) ~= regex {
+                let string_value: String? = c.stringValue(shared_strings!)
+                if string_value == nil { continue }
+                if c.stringValue(shared_strings!)!.compare(value, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame {
                     found.append(c)
                 }
             }
@@ -84,11 +74,12 @@ class Parser {
         - The label first found in the sheet and Cell objects representing the first occurrences of that label; nil and empty list if none were found.
      */
     func find_first_cell_occurrences(worksheet: Worksheet, labels: [String]) -> (label: String?, cells: [Cell]) {
-        let found_label: String? = nil
+        var found_label: String? = nil
         var found_time_cells: [Cell] = []
         for label in labels {
             found_time_cells = find_cell(worksheet: worksheet, value: label)
             if found_time_cells.count > 0 {
+                found_label = label
                 break
             }
         }
@@ -104,13 +95,18 @@ class Parser {
      */
     func pre_sanitize_cell(cell: String) -> String {
         var cell_copy = cell
+        
+        cell_copy = cell_copy.trimmingCharacters(in: CharacterSet(charactersIn: "0123456789").inverted)
+        
         if (cell_copy.contains(" ")) {
             cell_copy = cell_copy.components(separatedBy: " ")[0]
         }
         if (cell_copy.contains(",")) {
             cell_copy = cell_copy.components(separatedBy: ",")[0]
         }
+        
         cell_copy = cell_copy.trimmingCharacters(in: .whitespacesAndNewlines)
+        
         return cell_copy
     }
     
