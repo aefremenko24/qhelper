@@ -101,6 +101,10 @@ struct CueTime: Hashable, Identifiable {
     let asString: String
     let value: Float
     let id = UUID()
+    
+    static func == (lhs: CueTime, rhs: CueTime) -> Bool {
+        lhs.value == rhs.value && lhs.asString == rhs.asString
+    }
 }
 
 class CueTable: Hashable, Identifiable, ObservableObject {
