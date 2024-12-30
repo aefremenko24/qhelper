@@ -124,31 +124,15 @@ class Parser {
     }
     
     /**
-     Verifies that the given cell contains a valid time stamp and returns its Float represenation in seconds if so.
-     
-     - Parameters:
-        - time: Cell with the time stamp to be converted.
-     - Returns:CueTime object containing information about the number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
-     */
-    func verify_time_cell(time_cell: Cell) -> Optional<CueTime> {
-        if time_cell.value == nil {
-            return nil
-        }
-        if time_cell.dateValue != nil {
-            return self.verify_date_cell(date_cell: time_cell)
-        }
-        return self.verify_time_string(time_string: time_cell.stringValue(shared_strings!)!)
-    }
-    
-    /**
      Verifies that the given string is a float number in a format 123.345.
         
      - Parameters:
         - time_cell: Cell string containing a float in a format 123.345
-     - Returns:CueTime object containing information about the number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
+     - Returns:CueTime object containing information about the number of seconds that the given cell represents, nil if the cell is not a valid time stamp. If the time stamp is negative, it will be counted as 0.
      */
     func verify_float_string(time_cell: String) -> Optional<CueTime> {
-        if let mFloat = Float(time_cell) {
+        if var mFloat = Float(time_cell) {
+            mFloat = mFloat <= 0 ? 0 : mFloat
             return CueTime(asString: mFloat.toTimeElapsed(), value: mFloat)
         } else {
             return nil
@@ -195,6 +179,23 @@ class Parser {
             return CueTime(asString: time_interval.toTimeElapsed(), value: time_interval)
         }
         return nil
+    }
+    
+    /**
+     Verifies that the given cell contains a valid time stamp and returns its Float represenation in seconds if so.
+     
+     - Parameters:
+        - time: Cell with the time stamp to be converted.
+     - Returns:CueTime object containing information about the number of seconds that the given cell represents, nil if the cell is not a valid time stamp.
+     */
+    func verify_time_cell(time_cell: Cell) -> Optional<CueTime> {
+        if time_cell.value == nil {
+            return nil
+        }
+        if time_cell.dateValue != nil {
+            return self.verify_date_cell(date_cell: time_cell)
+        }
+        return self.verify_time_string(time_string: time_cell.stringValue(shared_strings!)!)
     }
 
     /**
