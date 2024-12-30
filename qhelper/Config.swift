@@ -76,6 +76,15 @@ class UserConfiguration: ObservableObject, Codable {
         try values.encode(cue_type, forKey: .cue_type)
         try values.encode(bring_out_blackout, forKey: .include_blackout_cue)
     }
+    
+    static func == (lhs: UserConfiguration, rhs: UserConfiguration) -> Bool {
+        lhs.workspace == rhs.workspace
+        && lhs.host == rhs.host
+        && lhs.send_port == rhs.send_port
+        && lhs.passcode == rhs.passcode
+        && lhs.cue_type == rhs.cue_type
+        && lhs.bring_out_blackout == rhs.bring_out_blackout
+    }
 }
 
 @MainActor
