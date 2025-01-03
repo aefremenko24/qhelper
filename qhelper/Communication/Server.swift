@@ -83,7 +83,7 @@ class Server: ObservableObject {
             }
 
             if self.listening {
-                self.listen_for_messages()
+                return self.listen_for_messages()
             }
         }
     }
