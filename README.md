@@ -20,10 +20,10 @@ Once the project is cloned and all prerequisites are satisfied, go to the **Prod
 ### Permissions
 
 QHelper will require some user permission to function properly:
-* Network: Incoming Connections (Server) - Receive responses from QLab (primarily used to get unique cue IDs).
-* Network: Outgoing Connections (Client) - Send messages to QLab. Used for adding cues, specifying their parameters, and arranging cue groups.
-* File Access: User Selected File (Read Only) - Parse XLSX files added by the user.
-* Resourse Access: Apple Events - Run Apple Scripts to convert generic MIDI cues into GIO commands. 
+* **Network: Incoming Connections (Server)** - Receive responses from QLab (primarily used to get unique cue IDs).
+* **Network: Outgoing Connections (Client)** - Send messages to QLab. Used for adding cues, specifying their parameters, and arranging cue groups.
+* **File Access: User Selected File (Read Only)** - Parse XLSX files added by the user.
+* **Resourse Access: Apple Events** - Run Apple Scripts to convert generic MIDI cues into GIO commands. 
 
 ## Built With
 
