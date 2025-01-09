@@ -468,7 +468,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = QHelper;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This will allow to convert ques to the proper MIDI or Network format.";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "(c) 2024 Arthur Efremenko. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "(c) 2025 Arthur Efremenko. All rights reserved.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Network usage allows to communicate with QLab workspaces.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -507,7 +507,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = QHelper;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This will allow to convert ques to the proper MIDI or Network format.";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "(c) 2024 Arthur Efremenko. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "(c) 2025 Arthur Efremenko. All rights reserved.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Network usage allows to communicate with QLab workspaces.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
