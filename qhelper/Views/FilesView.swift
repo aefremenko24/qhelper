@@ -13,8 +13,8 @@ struct FilesView: View {
     @ObservedObject var config: UserConfiguration
     var client: Client
     var server: Server
-    @State private var server_responses: [QLabResponse] = []
-    
+    @State private var isSending: Bool = false
+
     var body: some View {
         VStack {
             ScrollView {
@@ -29,43 +29,43 @@ struct FilesView: View {
                         }
                     Divider()
                 }
-                
+
                 Text("Add more sheets by dragging them here")
                     .font(.headline)
                     .foregroundColor(Color.gray)
                     .fontWeight(.medium)
             }
             .padding()
-            
+
             Button("Add all to QLab") {
+                isSending = true
+                server.resetResponseCollection()
                 client.update_configuration(config: config)
                 client.connect_to_workspace(passcode_string: config.passcode)
                 let cue_groups = client.send_cue_tables(cue_tables: files.get_all_cue_tables())
-                
+                let expectedCount = client.num_cues_added
+
                 Task {
+                    let responses = await server.waitForResponses(count: expectedCount)
+
                     for cue_group in cue_groups {
-                        cue_group.update_unique_id(qlab_responses: self.server_responses)
+                        cue_group.update_unique_id(qlab_responses: responses)
                         client.move_cue_children(cue: cue_group)
                     }
+
+                    client.num_cues_added = 0
+                    client.save_to_disk()
+                    isSending = false
                 }
-                
-                self.server_responses.removeAll()
-                client.num_cues_added = 0
-                
-                client.save_to_disk()
             }
             .buttonStyle(.borderedProminent)
             .padding(.top)
-            
+            .disabled(isSending)
+
             Button("Clear all files") {
                 files.files.removeAll()
             }
             .buttonStyle(.borderless)
         }
-        .onReceive(server.$messageReceived, perform: { message in
-            if message != nil {
-                self.server_responses.append(message!)
-            }
-        })
     }
 }

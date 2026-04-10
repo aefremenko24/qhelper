@@ -233,8 +233,8 @@ class Client {
      
      - Parameter cue_table: cue table to be added.
      */
-    func send_cue_table(cue_table: CueTable) -> Cue {
-        var current_cue_index: Int = cue_table.start_at_index.isEmpty ? num_cues_added : Int(cue_table.start_at_index)!
+    func send_cue_table(cue_table: CueTable, startIndex: Int) -> Cue {
+        var current_cue_index: Int = startIndex
         
         let group = Cue(name: cue_table.name, is_lx_cue: false, type: CueType.GROUP)
         
@@ -275,14 +275,31 @@ class Client {
      - Returns: Dictionary with cue group assignments, where keys are group indeces and their values are arrays of cue indeces in that group.
      */
     func send_cue_tables(cue_tables: [CueTable]) -> [Cue] {
-        let cue_tables = cue_tables.sorted(by: { $0 < $1})
-        var cue_groups: [Cue] = []
-        
+        // Determine increment: 100 normally, 1000 if any group needs > 100 cue numbers
+        let maxCuesInGroup = cue_tables.map { $0.times.count + 1 }.max() ?? 0
+        let increment = maxCuesInGroup > 100 ? 1000 : 100
+
+        // Resolve start indices: auto-assign for tables without an explicit "Start at #"
+        var nextAutoStart = increment
+        var resolvedIndices: [UUID: Int] = [:]
         for cue_table in cue_tables {
-            let cue_group = send_cue_table(cue_table: cue_table)
+            if cue_table.start_at_index.isEmpty {
+                resolvedIndices[cue_table.id] = nextAutoStart
+                nextAutoStart += increment
+            } else {
+                resolvedIndices[cue_table.id] = Int(cue_table.start_at_index)!
+            }
+        }
+
+        // Sort by resolved start index
+        let sorted = cue_tables.sorted { resolvedIndices[$0.id]! < resolvedIndices[$1.id]! }
+
+        var cue_groups: [Cue] = []
+        for cue_table in sorted {
+            let cue_group = send_cue_table(cue_table: cue_table, startIndex: resolvedIndices[cue_table.id]!)
             cue_groups.append(cue_group)
         }
-        
+
         return cue_groups
     }
 }
