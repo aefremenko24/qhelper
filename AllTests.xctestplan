@@ -18,13 +18,6 @@
         "identifier" : "41F5C2D82CEBA03D00721504",
         "name" : "qhelperTests"
       }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:qhelper.xcodeproj",
-        "identifier" : "41F5C2E22CEBA03D00721504",
-        "name" : "qhelperUITests"
-      }
     }
   ],
   "version" : 1
