@@ -105,6 +105,7 @@ struct SettingsView: View {
                         }
                         
                     }
+                    .padding()
                     .onChange(of: config.bring_out_blackout) { _ in
                         saveAction()
                     }
@@ -134,60 +135,58 @@ struct SettingsView: View {
                 DisclosureGroup(
                     isExpanded: $showAdvancedSettings,
                     content: {
-                        Form {
-                            TextField(
-                                text: $config.host,
-                                prompt: Text("Required")
-                            ) {
-                                Text("Host")
-                            }
-                            .onSubmit {
-                                if validateHost(host: config.host) {
-                                    saveAction()
-                                } else {
-                                    self.config.host = DEFAULT_HOST
-                                }
-                            }
-                            .disableAutocorrection(true)
-                            .padding()
-                            
-                            TextField(
-                                text: $config.send_port,
-                                prompt: Text("Required")
-                            ) {
-                                Text("Port")
-                            }
-                            .onSubmit {
-                                if validatePort(port: config.send_port) {
-                                    saveAction()
-                                } else {
-                                    self.config.send_port = DEFAULT_LISTENING_PORT
-                                }
-                            }
-                            .disableAutocorrection(true)
-                            .padding()
-                            
-                            SecureField(
-                                text: $config.passcode,
-                                prompt: Text("Optional")
-                            ) {
-                                Text("Passcode")
-                            }
-                            .onSubmit {
-                                if validatePassCode(passcode: config.passcode) {
-                                    saveAction()
-                                } else {
-                                    self.config.passcode = ""
-                                }
-                            }
-                            .disableAutocorrection(true)
-                            .padding()
+                        TextField(
+                            text: $config.host,
+                            prompt: Text("Required")
+                        ) {
+                            Text("Host")
                         }
+                        .onSubmit {
+                            if validateHost(host: config.host) {
+                                saveAction()
+                            } else {
+                                self.config.host = DEFAULT_HOST
+                            }
+                        }
+                        .disableAutocorrection(true)
+                        .padding()
+
+                        TextField(
+                            text: $config.send_port,
+                            prompt: Text("Required")
+                        ) {
+                            Text("Port")
+                        }
+                        .onSubmit {
+                            if validatePort(port: config.send_port) {
+                                saveAction()
+                            } else {
+                                self.config.send_port = DEFAULT_LISTENING_PORT
+                            }
+                        }
+                        .disableAutocorrection(true)
+                        .padding()
+
+                        SecureField(
+                            text: $config.passcode,
+                            prompt: Text("Optional")
+                        ) {
+                            Text("Passcode")
+                        }
+                        .onSubmit {
+                            if validatePassCode(passcode: config.passcode) {
+                                saveAction()
+                            } else {
+                                self.config.passcode = ""
+                            }
+                        }
+                        .disableAutocorrection(true)
+                        .padding()
                     },
                     label: {
                         HStack {
                             Text("Advanced Settings")
-                            
+
                             Button {
                                 presentAdvancedSettingsPopover = true
                             }
@@ -198,7 +197,7 @@ struct SettingsView: View {
                                     ) {
                                         Text("""
                                             If cues don't get added to QLab,
-                                            make sure these settings match 
+                                            make sure these settings match
                                             the parameters set in the Network
                                             tab in the QLab Settings.
                                             """)
@@ -209,7 +208,9 @@ struct SettingsView: View {
                         }
                     }
                 )
+                .padding()
             }
+            .formStyle(.grouped)
             .onChange(of: scenePhase) { phase in
                 if phase == .inactive { saveAction() }
             }
