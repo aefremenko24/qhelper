@@ -326,7 +326,7 @@ class Parser {
             for header_cell in header_cells {
                 let extracted_times = exctact_times(worksheet: worksheet.worksheet, reference: header_cell.reference)
                 if extracted_times.isEmpty { continue }
-                let cue_table_name = worksheets.count == 1 ? self.file_name.replacingOccurrences(of: ".xlsx", with: "") : worksheet.name
+                let cue_table_name = self.file_name.replacingOccurrences(of: ".xlsx", with: "")
                 let cueTable = CueTable(name: cue_table_name, header_cell: header_cell.reference, times: extracted_times)
                 result.append(cueTable)
             }
