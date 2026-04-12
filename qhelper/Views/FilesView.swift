@@ -13,6 +13,7 @@ struct FilesView: View {
     @ObservedObject var config: UserConfiguration
     var client: Client
     var server: Server
+    var connection: QLAbConnection
     @State private var isSending: Bool = false
 
     var body: some View {
@@ -43,8 +44,21 @@ struct FilesView: View {
                     server.resetResponseCollection()
                     let cueTables = files.get_all_cue_tables()
 
-                    Task.detached { [client, server, config] in
+                    Task.detached { [client, server, config, connection] in
                         client.update_configuration(config: config)
+
+                        // Establish the TCP connection to QLab
+                        do {
+                            try await connection.connect(
+                                host: config.host,
+                                port: UInt16(config.send_port) ?? 53000
+                            )
+                        } catch {
+                            print("TCP connection error: \(error)")
+                            await MainActor.run { isSending = false }
+                            return
+                        }
+
                         client.connect_to_workspace(passcode_string: config.passcode)
                         let cue_groups = client.send_cue_tables(cue_tables: cueTables)
                         let expectedCount = client.num_cues_added
@@ -58,6 +72,9 @@ struct FilesView: View {
 
                         client.num_cues_added = 0
                         client.save_to_disk()
+                        client.disconnect_from_workspace()
+                        connection.disconnect()
+
                         await MainActor.run {
                             isSending = false
                         }

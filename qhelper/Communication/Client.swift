@@ -9,15 +9,16 @@ import Foundation
 import OSCKit
 
 /**
- UDP client responsible for senting OSC messages to QLab workspaces.
+ TCP client responsible for sending OSC messages to QLab workspaces.
  */
 class Client {
-    let oscClient: OSCClient = OSCClient()
+    var connection: QLAbConnection?
     var config: UserConfiguration
     var num_cues_added: Int = 0
     var command_trace: [(String, OSCValues)]?
-    
-    init(keep_trace: Bool = false) {
+
+    init(connection: QLAbConnection? = nil, keep_trace: Bool = false) {
+        self.connection = connection
         self.config = UserConfiguration()
         if keep_trace {
             self.command_trace = []
@@ -42,8 +43,8 @@ class Client {
     func send_command(command: String, args: OSCValues = []) {
         let msg = OSCMessage(command, values: args)
         do {
-            try self.oscClient.send(msg, to: self.config.host, port: UInt16(self.config.send_port)!)
-            
+            let data = try msg.rawData()
+            connection?.send(data)
             command_trace?.append((command, args))
         } catch let err {
             print("error: \(err)")

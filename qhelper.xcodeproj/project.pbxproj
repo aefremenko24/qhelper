@@ -70,11 +70,6 @@
 			path = qhelperTests;
 			sourceTree = "<group>";
 		};
-		41F5C2E62CEBA03D00721504 /* qhelperUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = qhelperUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,7 +118,6 @@
 				41FEF6F32D036FE100DCAD4A /* README.md */,
 				41F5C2CA2CEBA03C00721504 /* qhelper */,
 				41F5C2DC2CEBA03D00721504 /* qhelperTests */,
-				41F5C2E62CEBA03D00721504 /* qhelperUITests */,
 				41148B632CF2F24200614C75 /* Frameworks */,
 				41F5C2C92CEBA03C00721504 /* Products */,
 			);
@@ -202,9 +196,6 @@
 			);
 			dependencies = (
 				41F5C2E52CEBA03D00721504 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				41F5C2E62CEBA03D00721504 /* qhelperUITests */,
 			);
 			name = qhelperUITests;
 			packageProductDependencies = (

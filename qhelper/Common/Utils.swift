@@ -197,12 +197,8 @@ let EMPTY_TIME_CELL_TOLERANCE: Int = 3
 let DEFAULT_HOST = "localhost"
 
 // The default port QLab listens for incoming OSC on.
-// Should be used for all commands sent through TCP and UDP by default.
+// Used for the TCP connection that carries both commands and responses.
 let DEFAULT_LISTENING_PORT: String = "53000"
-
-// The default port QLab sends UDP responses to.
-// Should be used to receive responses to requests sent to DEFAULT_LISTENING_PORT
-let DEFAULT_RESPONSE_PORT: Int = 53001
 
 // Default passcode to the QLab workspace
 let DEFAULT_PASSCODE = ""

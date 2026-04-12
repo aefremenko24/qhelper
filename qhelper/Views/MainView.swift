@@ -14,12 +14,13 @@ struct MainView: View {
     
     var client: Client
     var server: Server
-    
+    var connection: QLAbConnection
+
     var body: some View {
         if files.files.isEmpty {
             DropView()
         } else {
-            FilesView(files: files, config: config, client: client, server: server)
+            FilesView(files: files, config: config, client: client, server: server, connection: connection)
         }
     }
 }
