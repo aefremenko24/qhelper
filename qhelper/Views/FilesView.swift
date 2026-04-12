@@ -16,56 +16,72 @@ struct FilesView: View {
     @State private var isSending: Bool = false
 
     var body: some View {
-        VStack {
-            ScrollView {
-                ForEach($files.files) { $file in
-                    FileView(file: file)
-                        .contextMenu {
-                            Button(action: {
-                                files.delete(uuid: file.id)
-                            }){
-                                Text("Delete File")
+        ZStack {
+            VStack {
+                ScrollView {
+                    ForEach($files.files) { $file in
+                        FileView(file: file)
+                            .contextMenu {
+                                Button(action: {
+                                    files.delete(uuid: file.id)
+                                }){
+                                    Text("Delete File")
+                                }
                             }
-                        }
-                    Divider()
-                }
-
-                Text("Add more sheets by dragging them here")
-                    .font(.headline)
-                    .foregroundColor(Color.gray)
-                    .fontWeight(.medium)
-            }
-            .padding()
-
-            Button("Add all to QLab") {
-                isSending = true
-                server.resetResponseCollection()
-                client.update_configuration(config: config)
-                client.connect_to_workspace(passcode_string: config.passcode)
-                let cue_groups = client.send_cue_tables(cue_tables: files.get_all_cue_tables())
-                let expectedCount = client.num_cues_added
-
-                Task {
-                    let responses = await server.waitForResponses(count: expectedCount)
-
-                    for cue_group in cue_groups {
-                        cue_group.update_unique_id(qlab_responses: responses)
-                        client.move_cue_children(cue: cue_group)
+                        Divider()
                     }
 
-                    client.num_cues_added = 0
-                    client.save_to_disk()
-                    isSending = false
+                    Text("Add more sheets by dragging them here")
+                        .font(.headline)
+                        .foregroundColor(Color.gray)
+                        .fontWeight(.medium)
                 }
-            }
-            .buttonStyle(.borderedProminent)
-            .padding(.top)
-            .disabled(isSending)
+                .padding()
 
-            Button("Clear all files") {
-                files.files.removeAll()
+                Button("Add all to QLab") {
+                    isSending = true
+                    server.resetResponseCollection()
+                    let cueTables = files.get_all_cue_tables()
+
+                    Task.detached { [client, server, config] in
+                        client.update_configuration(config: config)
+                        client.connect_to_workspace(passcode_string: config.passcode)
+                        let cue_groups = client.send_cue_tables(cue_tables: cueTables)
+                        let expectedCount = client.num_cues_added
+
+                        let responses = await server.waitForResponses(count: expectedCount)
+
+                        for cue_group in cue_groups {
+                            cue_group.update_unique_id(qlab_responses: responses)
+                            client.move_cue_children(cue: cue_group)
+                        }
+
+                        client.num_cues_added = 0
+                        client.save_to_disk()
+                        await MainActor.run {
+                            isSending = false
+                        }
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top)
+                .disabled(isSending)
+
+                Button("Clear all files") {
+                    files.files.removeAll()
+                }
+                .buttonStyle(.borderless)
             }
-            .buttonStyle(.borderless)
+
+            if isSending {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+
+                ProgressView("Adding cues to QLab...")
+                    .controlSize(.large)
+                    .padding(24)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
         }
     }
 }
