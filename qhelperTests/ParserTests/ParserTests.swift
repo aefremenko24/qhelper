@@ -12,9 +12,9 @@ import CoreXLSX
 
 struct ParserTests {
     
-    let NICKI_SHOW_FILE: URL = URL(fileURLWithPath: "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/ParserTests/9. Sarah - The Nicki Show.xlsx")
+    let NICKI_SHOW_FILE: URL = URL(fileURLWithPath: "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/ParserTests/9. Sarah - The Nicki Show.xlsx")
     
-    let NUMALHAR_FILE: URL = URL(fileURLWithPath: "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/ParserTests/NUMalhar Lighting Cues D4ME 2024.xlsx")
+    let NUMALHAR_FILE: URL = URL(fileURLWithPath: "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/ParserTests/NUMalhar Lighting Cues D4ME 2024.xlsx")
     
     @Test func testSetSharedStrings() throws {
         let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)

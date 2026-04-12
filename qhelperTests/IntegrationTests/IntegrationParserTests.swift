@@ -10,12 +10,12 @@ import Testing
 
 struct IntegrationParserTests {
     
-    let workbook1 = "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Aaroh Lighting Cues Form-Fenway.xlsx"
-    let workbook2 = "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Amelia and Emily_Too Sweet.xlsx"
-    let workbook3 = "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Battle Of The ASO's Lighting Cues Form (NASO).xlsx"
-    let workbook4 = "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Candice Cues Fall 2024.xlsx"
-    let workbook5 = "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx"
-    let workbook6 = "/Users/lemanappazov/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Tyler Cues Fall 23.xlsx"
+    let workbook1 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Aaroh Lighting Cues Form-Fenway.xlsx"
+    let workbook2 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Amelia and Emily_Too Sweet.xlsx"
+    let workbook3 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Battle Of The ASO's Lighting Cues Form (NASO).xlsx"
+    let workbook4 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Candice Cues Fall 2024.xlsx"
+    let workbook5 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx"
+    let workbook6 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Tyler Cues Fall 23.xlsx"
 
     @Test func testAarohFenwayGeneral() throws {
         let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
