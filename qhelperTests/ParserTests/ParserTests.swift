@@ -194,4 +194,236 @@ struct ParserTests {
             #expect(parser.verify_time_string(time_string: time_stamp)?.asString == "00:30.00")
         }
     }
+
+    @Test func testVerifyTimeStringBareNumbers() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // Bare "0" should parse as 0 seconds
+        #expect(parser.verify_time_string(time_string: "0")?.value == 0.0)
+        #expect(parser.verify_time_string(time_string: "0")?.asString == "00:00.00")
+
+        // Bare integers should parse as raw seconds
+        #expect(parser.verify_time_string(time_string: "5")?.value == 5.0)
+        #expect(parser.verify_time_string(time_string: "5")?.asString == "00:05.00")
+
+        #expect(parser.verify_time_string(time_string: "30")?.value == 30.0)
+        #expect(parser.verify_time_string(time_string: "30")?.asString == "00:30.00")
+    }
+
+    @Test func testVerifyTimeStringRawFloats() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // Decimal floats without separators should parse as raw seconds
+        #expect(parser.verify_time_string(time_string: "5.085")?.value == 5.085)
+        #expect(parser.verify_time_string(time_string: "5.085")?.asString == "00:05.09")
+
+        #expect(parser.verify_time_string(time_string: "55.939")?.value == 55.939)
+        #expect(parser.verify_time_string(time_string: "55.939")?.asString == "00:55.94")
+
+        #expect(parser.verify_time_string(time_string: "1.5")?.value == 1.5)
+        #expect(parser.verify_time_string(time_string: "1.5")?.asString == "00:01.50")
+    }
+
+    @Test func testVerifyTimeStringThreeDigitMilliseconds() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // M:SS.mmm format (3-digit milliseconds after dot)
+        #expect(parser.verify_time_string(time_string: "1:17.878")?.value == 77.878)
+        #expect(parser.verify_time_string(time_string: "1:17.878")?.asString == "01:17.88")
+
+        #expect(parser.verify_time_string(time_string: "2:33.287")?.value == 153.287)
+        #expect(parser.verify_time_string(time_string: "2:33.287")?.asString == "02:33.29")
+
+        #expect(parser.verify_time_string(time_string: "3:09.029")?.value == 189.029)
+        #expect(parser.verify_time_string(time_string: "3:09.029")?.asString == "03:09.03")
+
+        // M:SS:mmm format (3-digit milliseconds with colon separator)
+        #expect(parser.verify_time_string(time_string: "1:17:878")?.value == 77.878)
+        #expect(parser.verify_time_string(time_string: "1:17:878")?.asString == "01:17.88")
+    }
+
+    // MARK: - Cue sheet image formats
+
+    @Test func testVerifyTimeStringImageFormats() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // Exact formats from the cue sheet image: M:SS.mmm with 3-digit milliseconds
+        #expect(parser.verify_time_string(time_string: "1:50.860")?.value == 110.86)
+        #expect(parser.verify_time_string(time_string: "1:50.860")?.asString == "01:50.86")
+
+        #expect(parser.verify_time_string(time_string: "2:11.202")?.value == 131.202)
+        #expect(parser.verify_time_string(time_string: "2:11.202")?.asString == "02:11.20")
+
+        #expect(parser.verify_time_string(time_string: "2:43.457")?.value == 163.457)
+        #expect(parser.verify_time_string(time_string: "2:43.457")?.asString == "02:43.46")
+
+        #expect(parser.verify_time_string(time_string: "3:02.055")?.value == 182.055)
+        #expect(parser.verify_time_string(time_string: "3:02.055")?.asString == "03:02.05")
+    }
+
+    // MARK: - Separator variety
+
+    @Test func testVerifyTimeStringSeparatorVariety() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // All separator types should produce the same result: 3m 4s = 184s
+        for ts in ["3:04", "3-04", "3'04", "3;04"] {
+            #expect(parser.verify_time_string(time_string: ts)?.value == 184.0,
+                    "Failed for \(ts)")
+            #expect(parser.verify_time_string(time_string: ts)?.asString == "03:04.00",
+                    "Failed for \(ts)")
+        }
+
+        // All separator types with decimal seconds: 3m 4.5s = 184.5s
+        for ts in ["3:04.5", "3-04.5", "3'04.5", "3;04.5"] {
+            #expect(parser.verify_time_string(time_string: ts)?.value == 184.5,
+                    "Failed for \(ts)")
+            #expect(parser.verify_time_string(time_string: ts)?.asString == "03:04.50",
+                    "Failed for \(ts)")
+        }
+
+        // Single-digit seconds with various separators: 1m 5s = 65s
+        for ts in ["1:5", "1-5", "1'5", "1;5"] {
+            #expect(parser.verify_time_string(time_string: ts)?.value == 65.0,
+                    "Failed for \(ts)")
+        }
+    }
+
+    // MARK: - Wrapped and decorated formats
+
+    @Test func testVerifyTimeStringWrappedFormats() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // Parentheses stripped by pre_sanitize
+        #expect(parser.verify_time_string(time_string: "(3:04)")?.value == 184.0)
+        #expect(parser.verify_time_string(time_string: "(3:04)")?.asString == "03:04.00")
+
+        // Square brackets stripped
+        #expect(parser.verify_time_string(time_string: "[2:30]")?.value == 150.0)
+
+        // Tildes stripped
+        #expect(parser.verify_time_string(time_string: "~1:30")?.value == 90.0)
+        #expect(parser.verify_time_string(time_string: "~2:30~")?.value == 150.0)
+
+        // Leading whitespace and trailing newlines
+        #expect(parser.verify_time_string(time_string: "  1:30  ")?.value == 90.0)
+        #expect(parser.verify_time_string(time_string: "1:30\n")?.value == 90.0)
+    }
+
+    // MARK: - Range extraction
+
+    @Test func testVerifyTimeStringRangeExtraction() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // Ranges with space-dash-space: pre_sanitize splits on space, takes first
+        #expect(parser.verify_time_string(time_string: "0:00 - 0:26")?.value == 0.0)
+        #expect(parser.verify_time_string(time_string: "1:29 - 2:52")?.value == 89.0)
+        #expect(parser.verify_time_string(time_string: "3:45 - 3:49")?.value == 225.0)
+
+        // Comma-separated lists: takes the first value
+        #expect(parser.verify_time_string(time_string: "3:01, 3:02, 3:03")?.value == 181.0)
+
+        // Range with mixed separators
+        #expect(parser.verify_time_string(time_string: "2-14 - 2-30")?.value == 134.0)
+    }
+
+    // MARK: - Invalid inputs
+
+    @Test func testVerifyTimeStringRejectsInvalid() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        #expect(parser.verify_time_string(time_string: "") == nil)
+        #expect(parser.verify_time_string(time_string: "abc") == nil)
+        #expect(parser.verify_time_string(time_string: "BLACKOUT") == nil)
+        #expect(parser.verify_time_string(time_string: "N/A") == nil)
+        #expect(parser.verify_time_string(time_string: "none") == nil)
+        #expect(parser.verify_time_string(time_string: "TBD") == nil)
+        #expect(parser.verify_time_string(time_string: " ") == nil)
+        #expect(parser.verify_time_string(time_string: "---") == nil)
+    }
+
+    // MARK: - Large values (>= 10 minutes)
+
+    @Test func testVerifyTimeStringLargeValues() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        #expect(parser.verify_time_string(time_string: "10:00")?.value == 600.0)
+        #expect(parser.verify_time_string(time_string: "10:00")?.asString == "10:00.00")
+
+        #expect(parser.verify_time_string(time_string: "15:30.5")?.value == 930.5)
+        #expect(parser.verify_time_string(time_string: "15:30.5")?.asString == "15:30.50")
+
+        #expect(parser.verify_time_string(time_string: "28:11.03")?.value == 1691.03)
+        #expect(parser.verify_time_string(time_string: "28:11.03")?.asString == "28:11.03")
+
+        // Large bare float (e.g. raw seconds for a long piece)
+        #expect(parser.verify_time_string(time_string: "304.5")?.value == 304.5)
+        #expect(parser.verify_time_string(time_string: "304.5")?.asString == "05:04.50")
+    }
+
+    // MARK: - Three-segment formats (M:S:cs centisecond interpretation)
+
+    @Test func testVerifyTimeStringThreeSegments() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // M:SS:cs — last integer segment is centiseconds (/100)
+        #expect(parser.verify_time_string(time_string: "0:05:50")?.value == 5.5)
+        #expect(parser.verify_time_string(time_string: "0:05:50")?.asString == "00:05.50")
+
+        #expect(parser.verify_time_string(time_string: "1:30:50")?.value == 90.5)
+        #expect(parser.verify_time_string(time_string: "1:30:50")?.asString == "01:30.50")
+
+        // Zero centiseconds
+        #expect(parser.verify_time_string(time_string: "0:05:00")?.value == 5.0)
+        #expect(parser.verify_time_string(time_string: "0:05:00")?.asString == "00:05.00")
+
+        #expect(parser.verify_time_string(time_string: "1:30:00")?.value == 90.0)
+        #expect(parser.verify_time_string(time_string: "1:30:00")?.asString == "01:30.00")
+
+        // Apostrophe as third separator
+        #expect(parser.verify_time_string(time_string: "0:05'50")?.value == 5.5)
+        #expect(parser.verify_time_string(time_string: "0:05'50")?.asString == "00:05.50")
+
+        // Three segments with decimal last part — NOT centisecond, treated as H:M:S.f
+        #expect(parser.verify_time_string(time_string: "0:01:01.34")?.value == 61.34)
+        #expect(parser.verify_time_string(time_string: "0:01:01.34")?.asString == "01:01.34")
+
+        // Three-digit millisecond segment (/1000)
+        #expect(parser.verify_time_string(time_string: "0:59:999")?.value == 59.999)
+        #expect(parser.verify_time_string(time_string: "0:59:999")?.asString == "01:00.00")
+    }
+
+    // MARK: - Edge cases and zero formats
+
+    @Test func testVerifyTimeStringEdgeCases() throws {
+        let parser = Parser(file_path: NICKI_SHOW_FILE.path, file_name: NICKI_SHOW_FILE.lastPathComponent)
+
+        // Zero in various formats
+        #expect(parser.verify_time_string(time_string: "0:00")?.value == 0.0)
+        #expect(parser.verify_time_string(time_string: "0:00")?.asString == "00:00.00")
+
+        #expect(parser.verify_time_string(time_string: "00:00")?.value == 0.0)
+        #expect(parser.verify_time_string(time_string: "00:00.00")?.value == 0.0)
+        #expect(parser.verify_time_string(time_string: "0.0")?.value == 0.0)
+
+        // Leading zeros don't change the value
+        #expect(parser.verify_time_string(time_string: "01:05")?.value == 65.0)
+        #expect(parser.verify_time_string(time_string: "01:05")?.asString == "01:05.00")
+        #expect(parser.verify_time_string(time_string: "01:05.00")?.value == 65.0)
+
+        // The specific ambiguous case from the user: 5:05 = 5min 5sec = 305s
+        #expect(parser.verify_time_string(time_string: "5:05")?.value == 305.0)
+        #expect(parser.verify_time_string(time_string: "5:05")?.asString == "05:05.00")
+
+        // Pre-sanitize strips leading non-digits (e.g., negative sign)
+        #expect(parser.verify_time_string(time_string: "-5")?.value == 5.0)
+        #expect(parser.verify_time_string(time_string: "-1:30")?.value == 90.0)
+
+        // Boundary: just under and at 1 minute
+        #expect(parser.verify_time_string(time_string: "0:59")?.value == 59.0)
+        #expect(parser.verify_time_string(time_string: "1:00")?.value == 60.0)
+
+        // Boundary: max two-digit seconds
+        #expect(parser.verify_time_string(time_string: "9:59.999")?.value == 599.999)
+    }
 }

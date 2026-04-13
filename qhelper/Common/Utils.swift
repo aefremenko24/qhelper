@@ -297,14 +297,16 @@ extension String {
         var parts = self.components(separatedBy: ":")
         let smallest_divison: Float = Float(parts.last!) ?? 0
         if parts.count > 2 && smallest_divison == floor(smallest_divison) {
+            let last_part = parts.last!
             parts.removeLast()
-            parts[parts.count - 1] = String(Float(parts[parts.count - 1])! + smallest_divison / 100)
+            let divisor: Float = last_part.count >= 3 ? 1000 : 100
+            parts[parts.count - 1] = String(Float(parts[parts.count - 1])! + smallest_divison / divisor)
         }
         for (index, part) in parts.reversed().enumerated() {
             interval += (Float(part) ?? 0) * pow(Float(60), Float(index))
         }
-        
-        return Float(round(100 * interval) / 100)
+
+        return Float(round(1000 * interval) / 1000)
     }
 }
 
@@ -315,8 +317,12 @@ extension Float {
     func toTimeElapsed() -> String {
         let decimal: Float = self - floor(self)
         let copy = Int(floor(self))
-        let minutes = (copy % 3600) / 60
-        let seconds = Float((copy % 3600) % 60) + decimal
+        var minutes = (copy % 3600) / 60
+        var seconds = Float((copy % 3600) % 60) + decimal
+        if seconds >= 59.995 {
+            seconds = 0.0
+            minutes += 1
+        }
         return String(format: "%02d:%05.2f", minutes, seconds)
     }
 }

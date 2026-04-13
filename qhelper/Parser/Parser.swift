@@ -171,14 +171,14 @@ class Parser {
         if let match = string_representation.firstMatch(of: time_cell_format) {
             var matched_string_representation = String(string_representation[match.range])
             if string_representation != matched_string_representation {
-                return verify_float_string(time_cell: time_string)
+                return verify_float_string(time_cell: string_representation)
             } else {
                 matched_string_representation = self.post_sanitize_cell(cell: matched_string_representation)
             }
             let time_interval = matched_string_representation.convertToTimeInterval()
             return CueTime(asString: time_interval.toTimeElapsed(), value: time_interval)
         }
-        return nil
+        return verify_float_string(time_cell: string_representation)
     }
     
     /**
@@ -192,10 +192,19 @@ class Parser {
         if time_cell.value == nil {
             return nil
         }
-        if time_cell.dateValue != nil {
+        // Only use the date path for values < 1.0 (fractions of a day).
+        // CoreXLSX returns a non-nil dateValue for ALL numeric cells regardless of format,
+        // so raw second values like 5.085 would be misinterpreted as Excel serial dates.
+        // Since 1.0 = 24 hours, no song timestamp stored as a date can have a value >= 1.0.
+        if time_cell.dateValue != nil,
+           let rawValue = time_cell.value.flatMap(Double.init),
+           rawValue < 1.0 {
             return self.verify_date_cell(date_cell: time_cell)
         }
-        return self.verify_time_string(time_string: time_cell.stringValue(shared_strings!)!)
+        if let string_value = time_cell.stringValue(shared_strings!) {
+            return self.verify_time_string(time_string: string_value)
+        }
+        return self.verify_float_string(time_cell: time_cell.value!)
     }
 
     /**

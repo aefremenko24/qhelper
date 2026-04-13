@@ -140,7 +140,6 @@ struct qhelperApp: App {
                         }
                     }
                 }
-                .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
                 .tabItem {
                     HStack {
                         Image(systemName: "gearshape")
@@ -160,7 +159,6 @@ struct qhelperApp: App {
                         Text("Got it")
                     ))
                 }
-                .padding(.horizontal, PADDING)
             }
             .frame(width: WINDOW_WIDTH - PADDING, height: WINDOW_HEIGHT - PADDING)
             .preferredColorScheme(.dark)

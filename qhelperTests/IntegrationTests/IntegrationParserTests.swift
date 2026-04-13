@@ -16,6 +16,7 @@ struct IntegrationParserTests {
     let workbook4 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Candice Cues Fall 2024.xlsx"
     let workbook5 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Lighting Cues Form- NUSANSRITI FASHION TEAM 2024.xlsx"
     let workbook6 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/Tyler Cues Fall 23.xlsx"
+    let workbook7 = "/Users/afrmnk/Desktop/Coding/Swift/QHelper_All/qhelper/qhelperTests/IntegrationTests/2. Alexis - Rolling in the Deep.xlsx"
 
     @Test func testAarohFenwayGeneral() throws {
         let parser = Parser(file_path: workbook1, file_name: String(workbook1.split(separator: "/").last!))
@@ -259,7 +260,7 @@ struct IntegrationParserTests {
         let cue_tables = try parser.parse_excel_file()
         
         let cue_table = cue_tables[0]
-        #expect(cue_table.name == "Boston University (Afrithims)")
+        #expect(cue_table.name == "Battle Of The ASO's Lighting Cues Form (NASO)")
         #expect(cue_table.times.count == 6)
         #expect(cue_table.times[0].value == 0.0)
         #expect(cue_table.times[0].asString == "00:00.00")
@@ -281,7 +282,7 @@ struct IntegrationParserTests {
         let cue_tables = try parser.parse_excel_file()
         
         let cue_table = cue_tables[4]
-        #expect(cue_table.name == "Tuft University (COCOA)")
+        #expect(cue_table.name == "Battle Of The ASO's Lighting Cues Form (NASO)")
         #expect(cue_table.times.count == 7)
         #expect(cue_table.times[0].value == 10.0)
         #expect(cue_table.times[0].asString == "00:10.00")
@@ -319,7 +320,7 @@ struct IntegrationParserTests {
         let cue_tables = try parser.parse_excel_file()
         
         let cue_table = cue_tables[0]
-        #expect(cue_table.name == "Blackman")
+        #expect(cue_table.name == "Lighting Cues Form- NUSANSRITI FASHION TEAM 2024")
         #expect(cue_table.times.count != 19)
         #expect(cue_table.times.count == 16)
         
@@ -368,6 +369,58 @@ struct IntegrationParserTests {
         try parser.set_shared_strings()
         let cue_tables = try parser.parse_excel_file()
         #expect(cue_tables.count == 4)
+    }
+
+    @Test func testAlexisRollingGeneral() throws {
+        let parser = Parser(file_path: workbook7, file_name: String(workbook7.split(separator: "/").last!))
+        try parser.set_shared_strings()
+        let cue_tables = try parser.parse_excel_file()
+        // Blackman sheet has 10 cues; Fenway sheet has header but no data
+        #expect(cue_tables.count == 1)
+    }
+
+    @Test func testAlexisRolling() throws {
+        let parser = Parser(file_path: workbook7, file_name: String(workbook7.split(separator: "/").last!))
+        try parser.set_shared_strings()
+        let cue_tables = try parser.parse_excel_file()
+
+        let cue_table = cue_tables[0]
+        #expect(cue_table.name == "2. Alexis - Rolling in the Deep")
+        #expect(cue_table.times.count == 10)
+
+        // Cue 1: 0.0 stored as float — goes through date path (rawValue < 1.0)
+        #expect(cue_table.times[0].value == 0.0)
+        #expect(cue_table.times[0].asString == "00:00.00")
+
+        // Cue 2: 5.085 stored as float — must NOT go through date path (rawValue >= 1.0)
+        #expect(cue_table.times[1].value == 5.085)
+        #expect(cue_table.times[1].asString == "00:05.09")
+
+        // Cue 3: 55.939 stored as float — must NOT go through date path
+        #expect(cue_table.times[2].value == 55.939)
+        #expect(cue_table.times[2].asString == "00:55.94")
+
+        // Cue 4-10: stored as shared strings in M:SS.mmm format
+        #expect(cue_table.times[3].value == 77.878)
+        #expect(cue_table.times[3].asString == "01:17.88")
+
+        #expect(cue_table.times[4].value == 110.86)
+        #expect(cue_table.times[4].asString == "01:50.86")
+
+        #expect(cue_table.times[5].value == 131.202)
+        #expect(cue_table.times[5].asString == "02:11.20")
+
+        #expect(cue_table.times[6].value == 153.287)
+        #expect(cue_table.times[6].asString == "02:33.29")
+
+        #expect(cue_table.times[7].value == 163.457)
+        #expect(cue_table.times[7].asString == "02:43.46")
+
+        #expect(cue_table.times[8].value == 182.055)
+        #expect(cue_table.times[8].asString == "03:02.05")
+
+        #expect(cue_table.times[9].value == 189.029)
+        #expect(cue_table.times[9].asString == "03:09.03")
     }
 
 }

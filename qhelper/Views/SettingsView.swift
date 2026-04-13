@@ -211,6 +211,7 @@ struct SettingsView: View {
                 .padding()
             }
             .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
             .onChange(of: scenePhase) { phase in
                 if phase == .inactive { saveAction() }
             }
